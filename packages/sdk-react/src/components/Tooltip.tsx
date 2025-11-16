@@ -2,7 +2,7 @@
  * Tooltip component with Popper.js positioning
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import type { Step } from '@dap-overlay/sdk-core';
 import { sanitizeHtml } from '@dap-overlay/sdk-core';
 import { usePopper } from '../hooks/usePopper.js';
@@ -14,13 +14,20 @@ export interface TooltipProps {
   onShow?: (step: Step) => void;
 }
 
-export function Tooltip({ step, onDismiss, onCtaClick, onShow }: TooltipProps) {
+function TooltipComponent({ step, onDismiss, onCtaClick, onShow }: TooltipProps) {
   const [anchorElement, setAnchorElement] = useState<HTMLElement | null>(null);
-  const { setPopperElement, setArrowElement } = usePopper(anchorElement, {
-    placement: step.popper?.placement,
-    offset: step.popper?.offset,
-    strategy: step.popper?.strategy,
-  });
+
+  // Memoize popper options to prevent recreation
+  const popperOptions = useMemo(
+    () => ({
+      placement: step.popper?.placement,
+      offset: step.popper?.offset,
+      strategy: step.popper?.strategy,
+    }),
+    [step.popper?.placement, step.popper?.offset, step.popper?.strategy]
+  );
+
+  const { setPopperElement, setArrowElement } = usePopper(anchorElement, popperOptions);
 
   // Find anchor element
   useEffect(() => {
@@ -34,12 +41,23 @@ export function Tooltip({ step, onDismiss, onCtaClick, onShow }: TooltipProps) {
     }
   }, [step.selector]);
 
-  // Call onShow when mounted
+  // Call onShow when mounted - only once per step.id
   useEffect(() => {
     if (onShow) {
       onShow(step);
     }
-  }, [step, onShow]);
+    // Only call when step.id changes, not on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step.id]);
+
+  // Memoize event handlers to prevent unnecessary re-renders
+  const handleDismiss = useCallback(() => {
+    onDismiss(step);
+  }, [onDismiss, step]);
+
+  const handleCtaClick = useCallback(() => {
+    onCtaClick(step);
+  }, [onCtaClick, step]);
 
   if (!anchorElement) {
     return null;
@@ -57,7 +75,7 @@ export function Tooltip({ step, onDismiss, onCtaClick, onShow }: TooltipProps) {
           <h3 className="dap-overlay-react__title">{step.content.title}</h3>
           <button
             className="dap-overlay-react__close"
-            onClick={() => onDismiss(step)}
+            onClick={handleDismiss}
             aria-label="Close"
           >
             &times;
@@ -75,7 +93,7 @@ export function Tooltip({ step, onDismiss, onCtaClick, onShow }: TooltipProps) {
 
       {step.actions?.cta && (
         <div className="dap-overlay-react__footer">
-          <button className="dap-overlay-react__cta" onClick={() => onCtaClick(step)}>
+          <button className="dap-overlay-react__cta" onClick={handleCtaClick}>
             {step.actions.cta.label}
           </button>
         </div>
@@ -85,3 +103,6 @@ export function Tooltip({ step, onDismiss, onCtaClick, onShow }: TooltipProps) {
     </div>
   );
 }
+
+// Memoize component to prevent re-renders when props haven't changed
+export const Tooltip = memo(TooltipComponent);

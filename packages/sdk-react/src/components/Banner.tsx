@@ -2,7 +2,7 @@
  * Banner component (fixed position at top)
  */
 
-import { useEffect } from 'react';
+import { useEffect, useCallback, memo } from 'react';
 import type { Step } from '@dap-overlay/sdk-core';
 import { sanitizeHtml } from '@dap-overlay/sdk-core';
 
@@ -13,13 +13,24 @@ export interface BannerProps {
   onShow?: (step: Step) => void;
 }
 
-export function Banner({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
-  // Call onShow when mounted
+function BannerComponent({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
+  // Call onShow when mounted - only once per step.id
   useEffect(() => {
     if (onShow) {
       onShow(step);
     }
-  }, [step, onShow]);
+    // Only call when step.id changes, not on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step.id]);
+
+  // Memoize event handlers to prevent unnecessary re-renders
+  const handleDismiss = useCallback(() => {
+    onDismiss(step);
+  }, [onDismiss, step]);
+
+  const handleCtaClick = useCallback(() => {
+    onCtaClick(step);
+  }, [onCtaClick, step]);
 
   return (
     <div className="dap-overlay-react dap-overlay-react--banner" role="status" aria-live="polite">
@@ -27,7 +38,7 @@ export function Banner({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
         {step.content.title && <h3 className="dap-overlay-react__title">{step.content.title}</h3>}
         <button
           className="dap-overlay-react__close"
-          onClick={() => onDismiss(step)}
+          onClick={handleDismiss}
           aria-label="Close"
         >
           &times;
@@ -44,7 +55,7 @@ export function Banner({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
 
       {step.actions?.cta && (
         <div className="dap-overlay-react__footer">
-          <button className="dap-overlay-react__cta" onClick={() => onCtaClick(step)}>
+          <button className="dap-overlay-react__cta" onClick={handleCtaClick}>
             {step.actions.cta.label}
           </button>
         </div>
@@ -52,3 +63,6 @@ export function Banner({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
     </div>
   );
 }
+
+// Memoize component to prevent re-renders when props haven't changed
+export const Banner = memo(BannerComponent);

@@ -2,7 +2,7 @@
  * Modal component (centered with backdrop)
  */
 
-import { useEffect } from 'react';
+import { useEffect, useCallback, memo } from 'react';
 import type { Step } from '@dap-overlay/sdk-core';
 import { sanitizeHtml } from '@dap-overlay/sdk-core';
 
@@ -13,31 +13,42 @@ export interface ModalProps {
   onShow?: (step: Step) => void;
 }
 
-export function Modal({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
-  // Call onShow when mounted
+function ModalComponent({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
+  // Call onShow when mounted - only once per step.id
   useEffect(() => {
     if (onShow) {
       onShow(step);
     }
-  }, [step, onShow]);
+    // Only call when step.id changes, not on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step.id]);
+
+  // Memoize event handlers to prevent unnecessary re-renders
+  const handleDismiss = useCallback(() => {
+    onDismiss(step);
+  }, [onDismiss, step]);
+
+  const handleCtaClick = useCallback(() => {
+    onCtaClick(step);
+  }, [onCtaClick, step]);
 
   // ESC key handler
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onDismiss(step);
+        handleDismiss();
       }
     };
 
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [step, onDismiss]);
+  }, [handleDismiss]);
 
   return (
     <>
       <div
         className="dap-overlay-react-backdrop"
-        onClick={() => onDismiss(step)}
+        onClick={handleDismiss}
         aria-hidden="true"
       />
       <div className="dap-overlay-react dap-overlay-react--modal" role="dialog" aria-modal="true">
@@ -45,7 +56,7 @@ export function Modal({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
           {step.content.title && <h3 className="dap-overlay-react__title">{step.content.title}</h3>}
           <button
             className="dap-overlay-react__close"
-            onClick={() => onDismiss(step)}
+            onClick={handleDismiss}
             aria-label="Close"
           >
             &times;
@@ -62,7 +73,7 @@ export function Modal({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
 
         {step.actions?.cta && (
           <div className="dap-overlay-react__footer">
-            <button className="dap-overlay-react__cta" onClick={() => onCtaClick(step)}>
+            <button className="dap-overlay-react__cta" onClick={handleCtaClick}>
               {step.actions.cta.label}
             </button>
           </div>
@@ -71,3 +82,6 @@ export function Modal({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
     </>
   );
 }
+
+// Memoize component to prevent re-renders when props haven't changed
+export const Modal = memo(ModalComponent);
