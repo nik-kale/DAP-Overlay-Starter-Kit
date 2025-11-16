@@ -4,7 +4,7 @@
 
 import { useEffect, useCallback, memo } from 'react';
 import type { Step } from '@dap-overlay/sdk-core';
-import { sanitizeHtml } from '@dap-overlay/sdk-core';
+import { useSanitizedHtml } from '../hooks/useSanitizedHtml.js';
 
 export interface BannerProps {
   step: Step;
@@ -14,6 +14,12 @@ export interface BannerProps {
 }
 
 function BannerComponent({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
+  // Sanitize HTML content if needed
+  const sanitizedBody = useSanitizedHtml(
+    step.content.body,
+    step.content.allowHtml || false
+  );
+
   // Call onShow when mounted - only once per step.id
   useEffect(() => {
     if (onShow) {
@@ -47,7 +53,7 @@ function BannerComponent({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
 
       <div className="dap-overlay-react__body">
         {step.content.allowHtml ? (
-          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(step.content.body) }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizedBody }} />
         ) : (
           <p>{step.content.body}</p>
         )}

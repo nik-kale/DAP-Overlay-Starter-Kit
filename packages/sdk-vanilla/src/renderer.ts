@@ -24,11 +24,11 @@ export class OverlayRenderer {
   /**
    * Render a step as an overlay
    */
-  render(step: Step): void {
+  async render(step: Step): Promise<void> {
     // Remove existing overlay if it exists
     this.destroy(step.id);
 
-    const overlay = this.createElement(step);
+    const overlay = await this.createElement(step);
     this.overlayElements.set(step.id, overlay);
 
     if (step.type === 'tooltip' && step.selector) {
@@ -43,7 +43,7 @@ export class OverlayRenderer {
   /**
    * Create the overlay DOM element
    */
-  private createElement(step: Step): HTMLElement {
+  private async createElement(step: Step): Promise<HTMLElement> {
     const overlay = document.createElement('div');
     overlay.className = `dap-overlay dap-overlay--${step.type}`;
     overlay.setAttribute('data-step-id', step.id);
@@ -51,7 +51,7 @@ export class OverlayRenderer {
     overlay.setAttribute('aria-live', 'polite');
 
     // Build content
-    const contentHtml = this.buildContent(step);
+    const contentHtml = await this.buildContent(step);
     overlay.innerHTML = contentHtml;
 
     // Attach event listeners
@@ -63,7 +63,7 @@ export class OverlayRenderer {
   /**
    * Build the HTML content for an overlay
    */
-  private buildContent(step: Step): string {
+  private async buildContent(step: Step): Promise<string> {
     const { content, actions } = step;
 
     let html = '';
@@ -81,7 +81,7 @@ export class OverlayRenderer {
     // Body
     html += '<div class="dap-overlay__body">';
     if (content.allowHtml) {
-      html += sanitizeHtml(content.body);
+      html += await sanitizeHtml(content.body);
     } else {
       html += `<p>${this.escapeHtml(content.body)}</p>`;
     }

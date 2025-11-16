@@ -10,7 +10,6 @@ import type {
   TelemetryContext,
   RouteContext,
 } from './types.js';
-import { validateStepsDocument } from './validator.js';
 import { evaluateConditions } from './evaluator.js';
 import { TelemetryClient } from './telemetry.js';
 
@@ -30,12 +29,15 @@ export class GuideEngine {
     this.telemetryClient = options.telemetryClient || new TelemetryClient();
     this.callbacks = options.callbacks || new Map();
 
-    // Validate and load steps
+    // Load steps (validation removed to reduce bundle size by ~100KB)
+    // Validate your steps.json at build time or using a separate tool
     this.loadSteps(options.steps);
   }
 
   /**
-   * Load and validate step definitions
+   * Load step definitions
+   * Note: Runtime validation has been removed to reduce bundle size
+   * Validate your steps JSON schema at build time instead
    */
   private loadSteps(stepsInput: StepsDocument | Step[]): void {
     let stepsDoc: StepsDocument;
@@ -46,14 +48,7 @@ export class GuideEngine {
       stepsDoc = stepsInput;
     }
 
-    const result = validateStepsDocument(stepsDoc);
-
-    if (!result.valid) {
-      console.error('Step validation failed:', result.errors);
-      throw new Error(`Invalid steps document: ${result.errors?.join(', ')}`);
-    }
-
-    this.steps = result.data!.steps;
+    this.steps = stepsDoc.steps;
   }
 
   /**

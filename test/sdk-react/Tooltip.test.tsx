@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { Tooltip } from '../../packages/sdk-react/src/components/Tooltip';
 import type { Step } from '@dap-overlay/sdk-core';
 
@@ -173,7 +173,7 @@ describe('Tooltip Component', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('should render sanitized HTML when allowHtml is true', () => {
+  it('should render sanitized HTML when allowHtml is true', async () => {
     const stepWithHtml = {
       ...mockStep,
       content: {
@@ -192,8 +192,11 @@ describe('Tooltip Component', () => {
       />
     );
 
-    const strongElement = screen.getByText('Bold text');
-    expect(strongElement.tagName).toBe('STRONG');
+    // Wait for async HTML sanitization to complete
+    await waitFor(() => {
+      const strongElement = screen.getByText('Bold text');
+      expect(strongElement.tagName).toBe('STRONG');
+    });
   });
 
   it('should have correct ARIA attributes', () => {

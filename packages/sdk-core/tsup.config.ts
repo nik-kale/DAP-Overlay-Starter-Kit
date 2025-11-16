@@ -6,7 +6,8 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  splitting: false,
+  splitting: true, // Enable code splitting for better tree-shaking
   treeshake: true,
-  external: [],
+  external: ['ajv'], // Mark AJV as external (not used in core anymore)
+  minify: false, // Users can minify in their build
 });

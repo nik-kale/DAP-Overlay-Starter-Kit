@@ -4,7 +4,7 @@
  */
 
 export * from './types.js';
-export * from './validator.js';
+// export * from './validator.js'; // Removed to reduce bundle size (~100KB) - validate steps at build time instead
 export * from './evaluator.js';
 export * from './telemetry.js';
 export * from './guide-engine.js';

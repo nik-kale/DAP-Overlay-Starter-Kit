@@ -48,30 +48,31 @@ describe('GuideEngine', () => {
   });
 
   describe('initialization', () => {
-    it('should load and validate steps', () => {
+    it('should load steps', () => {
       const steps = engine.getSteps();
       expect(steps).toHaveLength(2);
       expect(steps[0].id).toBe('step-1');
     });
 
-    it('should throw error for invalid steps', () => {
+    it('should accept invalid steps without validation (validation removed for bundle size)', () => {
       const invalidSteps = {
         version: '1.0',
         steps: [
           {
             id: 'invalid',
             type: 'tooltip',
-            // missing required fields
+            // missing required fields - no validation happens
           },
         ],
       };
 
+      // Should NOT throw - validation is skipped to reduce bundle size
       expect(() => {
         new GuideEngine({
           steps: invalidSteps as any,
           telemetryClient,
         });
-      }).toThrow();
+      }).not.toThrow();
     });
   });
 

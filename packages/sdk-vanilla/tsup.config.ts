@@ -7,8 +7,9 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   globalName: 'DAPOverlay',
-  splitting: false,
+  splitting: true, // Enable code splitting (not for IIFE, but for ESM/CJS)
   treeshake: true,
-  external: [],
-  noExternal: ['@dap-overlay/sdk-core', '@popperjs/core'],
+  external: ['ajv'], // Don't bundle AJV (not used)
+  noExternal: ['@dap-overlay/sdk-core', '@popperjs/core', 'dompurify'], // Bundle these
+  minify: false, // Users can minify in their build
 });

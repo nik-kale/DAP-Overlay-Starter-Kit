@@ -2,22 +2,37 @@
  * Security utilities for sanitizing HTML and preventing XSS
  */
 
-// Import DOMPurify - will be bundled but only used in browser
-import DOMPurify from 'dompurify';
+// Lazy-loaded DOMPurify instance (only loaded when needed)
+let DOMPurifyInstance: typeof import('dompurify').default | null = null;
+
+/**
+ * Lazy-load DOMPurify (only when HTML sanitization is needed)
+ */
+async function loadDOMPurify(): Promise<typeof import('dompurify').default> {
+  if (!DOMPurifyInstance) {
+    const module = await import('dompurify');
+    DOMPurifyInstance = module.default;
+  }
+  return DOMPurifyInstance;
+}
 
 /**
  * Sanitize HTML content using DOMPurify
  * Removes script tags, event handlers, and other potentially dangerous content
  *
+ * NOTE: This function is async and lazy-loads DOMPurify on first use
+ *
  * @throws {Error} If called in a non-browser environment (SSR)
  */
-export function sanitizeHtml(html: string): string {
+export async function sanitizeHtml(html: string): Promise<string> {
   if (typeof window === 'undefined') {
     throw new Error(
       'sanitizeHtml can only be used in browser environments. ' +
         'For SSR, sanitize HTML on the server or disable HTML content in overlays.'
     );
   }
+
+  const DOMPurify = await loadDOMPurify();
 
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [

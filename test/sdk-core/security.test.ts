@@ -6,35 +6,35 @@ import { describe, it, expect } from 'vitest';
 import { sanitizeHtml, validateSelector } from '../../packages/sdk-core/src/security.js';
 
 describe('sanitizeHtml', () => {
-  it('should allow safe HTML tags', () => {
+  it('should allow safe HTML tags', async () => {
     const html = '<p>Hello <strong>world</strong></p>';
-    const result = sanitizeHtml(html);
+    const result = await sanitizeHtml(html);
     expect(result).toContain('<p>');
     expect(result).toContain('<strong>');
   });
 
-  it('should remove script tags', () => {
+  it('should remove script tags', async () => {
     const html = '<p>Hello</p><script>alert("xss")</script>';
-    const result = sanitizeHtml(html);
+    const result = await sanitizeHtml(html);
     expect(result).not.toContain('<script>');
     expect(result).not.toContain('alert');
   });
 
-  it('should remove event handlers', () => {
+  it('should remove event handlers', async () => {
     const html = '<p onclick="alert(\'xss\')">Click me</p>';
-    const result = sanitizeHtml(html);
+    const result = await sanitizeHtml(html);
     expect(result).not.toContain('onclick');
   });
 
-  it('should remove dangerous tags', () => {
+  it('should remove dangerous tags', async () => {
     const html = '<iframe src="evil.com"></iframe>';
-    const result = sanitizeHtml(html);
+    const result = await sanitizeHtml(html);
     expect(result).not.toContain('<iframe');
   });
 
-  it('should allow links with safe attributes', () => {
+  it('should allow links with safe attributes', async () => {
     const html = '<a href="https://example.com" target="_blank">Link</a>';
-    const result = sanitizeHtml(html);
+    const result = await sanitizeHtml(html);
     expect(result).toContain('<a');
     expect(result).toContain('href');
   });

@@ -6,7 +6,8 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  splitting: false,
+  splitting: true, // Enable code splitting for better tree-shaking
   treeshake: true,
-  external: ['react', 'react-dom'],
+  external: ['react', 'react-dom', 'ajv'], // Don't bundle these
+  minify: false, // Users can minify in their build
 });

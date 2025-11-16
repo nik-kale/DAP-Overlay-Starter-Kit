@@ -35,13 +35,13 @@ describe('OverlayRenderer', () => {
   });
 
   describe('Construction', () => {
-    it('should create renderer with callbacks', () => {
+    it('should create renderer with callbacks', async () => {
       expect(renderer).toBeInstanceOf(OverlayRenderer);
     });
   });
 
   describe('Tooltip rendering', () => {
-    it('should render tooltip with valid selector', () => {
+    it('should render tooltip with valid selector', async () => {
       const step: Step = {
         id: 'tooltip-1',
         type: 'tooltip',
@@ -52,14 +52,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const overlay = document.querySelector('[data-step-id="tooltip-1"]');
       expect(overlay).toBeInTheDocument();
       expect(overlay).toHaveClass('dap-overlay--tooltip');
     });
 
-    it('should render tooltip content correctly', () => {
+    it('should render tooltip content correctly', async () => {
       const step: Step = {
         id: 'tooltip-1',
         type: 'tooltip',
@@ -70,13 +70,13 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       expect(document.querySelector('.dap-overlay__title')).toHaveTextContent('My Title');
       expect(document.querySelector('.dap-overlay__body')).toHaveTextContent('My Body');
     });
 
-    it('should render tooltip with CTA button', () => {
+    it('should render tooltip with CTA button', async () => {
       const step: Step = {
         id: 'tooltip-1',
         type: 'tooltip',
@@ -92,14 +92,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const ctaButton = document.querySelector('.dap-overlay__cta');
       expect(ctaButton).toBeInTheDocument();
       expect(ctaButton).toHaveTextContent('Click me');
     });
 
-    it('should not render tooltip with invalid selector', () => {
+    it('should not render tooltip with invalid selector', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const step: Step = {
@@ -111,13 +111,13 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       expect(consoleErrorSpy).toHaveBeenCalled();
       consoleErrorSpy.mockRestore();
     });
 
-    it('should warn when anchor element not found', () => {
+    it('should warn when anchor element not found', async () => {
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const step: Step = {
@@ -129,13 +129,13 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       expect(consoleWarnSpy).toHaveBeenCalledWith('Anchor element not found for selector: #nonexistent');
       consoleWarnSpy.mockRestore();
     });
 
-    it('should render tooltip with sanitized HTML', () => {
+    it('should render tooltip with sanitized HTML', async () => {
       const step: Step = {
         id: 'tooltip-1',
         type: 'tooltip',
@@ -146,14 +146,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const strongElement = document.querySelector('.dap-overlay__body strong');
       expect(strongElement).toBeInTheDocument();
       expect(strongElement).toHaveTextContent('Bold text');
     });
 
-    it('should escape HTML when allowHtml is false', () => {
+    it('should escape HTML when allowHtml is false', async () => {
       const step: Step = {
         id: 'tooltip-1',
         type: 'tooltip',
@@ -164,14 +164,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const body = document.querySelector('.dap-overlay__body');
       expect(body?.innerHTML).toContain('&lt;script&gt;');
       expect(body?.querySelector('script')).toBeNull();
     });
 
-    it('should include arrow element for tooltips', () => {
+    it('should include arrow element for tooltips', async () => {
       const step: Step = {
         id: 'tooltip-1',
         type: 'tooltip',
@@ -181,7 +181,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const arrow = document.querySelector('.dap-overlay__arrow');
       expect(arrow).toBeInTheDocument();
@@ -190,7 +190,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('Banner rendering', () => {
-    it('should render banner', () => {
+    it('should render banner', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -200,14 +200,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const overlay = document.querySelector('[data-step-id="banner-1"]');
       expect(overlay).toBeInTheDocument();
       expect(overlay).toHaveClass('dap-overlay--banner');
     });
 
-    it('should render banner with title', () => {
+    it('should render banner with title', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -217,12 +217,12 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       expect(document.querySelector('.dap-overlay__title')).toHaveTextContent('Important');
     });
 
-    it('should render banner without title', () => {
+    it('should render banner without title', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -231,13 +231,13 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       expect(document.querySelector('.dap-overlay__title')).toBeNull();
       expect(document.querySelector('.dap-overlay__body')).toHaveTextContent('No title');
     });
 
-    it('should append banner to document.body', () => {
+    it('should append banner to document.body', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -246,7 +246,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const overlay = document.querySelector('[data-step-id="banner-1"]');
       expect(overlay?.parentElement).toBe(document.body);
@@ -254,7 +254,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('Modal rendering', () => {
-    it('should render modal', () => {
+    it('should render modal', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -264,14 +264,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const overlay = document.querySelector('.dap-overlay--modal[data-step-id="modal-1"]');
       expect(overlay).toBeInTheDocument();
       expect(overlay).toHaveClass('dap-overlay--modal');
     });
 
-    it('should render modal with backdrop', () => {
+    it('should render modal with backdrop', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -280,13 +280,13 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const backdrop = document.querySelector('.dap-overlay-backdrop');
       expect(backdrop).toBeInTheDocument();
     });
 
-    it('should call onDismiss when backdrop is clicked', () => {
+    it('should call onDismiss when backdrop is clicked', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -295,7 +295,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const backdrop = document.querySelector('.dap-overlay-backdrop') as HTMLElement;
       backdrop.click();
@@ -303,7 +303,7 @@ describe('OverlayRenderer', () => {
       expect(mockCallbacks.onDismiss).toHaveBeenCalledWith('modal-1');
     });
 
-    it('should call onDismiss when Escape key is pressed', () => {
+    it('should call onDismiss when Escape key is pressed', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -312,7 +312,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       document.dispatchEvent(event);
@@ -320,7 +320,7 @@ describe('OverlayRenderer', () => {
       expect(mockCallbacks.onDismiss).toHaveBeenCalledWith('modal-1');
     });
 
-    it('should not call onDismiss for non-Escape keys', () => {
+    it('should not call onDismiss for non-Escape keys', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -329,7 +329,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const event = new KeyboardEvent('keydown', { key: 'Enter' });
       document.dispatchEvent(event);
@@ -339,7 +339,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('Event listeners', () => {
-    it('should call onDismiss when close button is clicked', () => {
+    it('should call onDismiss when close button is clicked', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -349,7 +349,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const closeBtn = document.querySelector('.dap-overlay__close') as HTMLElement;
       closeBtn.click();
@@ -357,7 +357,7 @@ describe('OverlayRenderer', () => {
       expect(mockCallbacks.onDismiss).toHaveBeenCalledWith('banner-1');
     });
 
-    it('should call onCtaClick when CTA button is clicked', () => {
+    it('should call onCtaClick when CTA button is clicked', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -372,7 +372,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const ctaBtn = document.querySelector('.dap-overlay__cta') as HTMLElement;
       ctaBtn.click();
@@ -382,7 +382,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('Destroy', () => {
-    it('should remove overlay element', () => {
+    it('should remove overlay element', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -391,14 +391,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
       expect(document.querySelector('[data-step-id="banner-1"]')).toBeInTheDocument();
 
       renderer.destroy('banner-1');
       expect(document.querySelector('[data-step-id="banner-1"]')).not.toBeInTheDocument();
     });
 
-    it('should remove event listeners to prevent memory leaks', () => {
+    it('should remove event listeners to prevent memory leaks', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -407,7 +407,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
       renderer.destroy('modal-1');
 
       // Try to trigger event after destroy
@@ -418,7 +418,7 @@ describe('OverlayRenderer', () => {
       expect(mockCallbacks.onDismiss).not.toHaveBeenCalled();
     });
 
-    it('should remove modal backdrop', () => {
+    it('should remove modal backdrop', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -427,14 +427,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
       expect(document.querySelector('.dap-overlay-backdrop')).toBeInTheDocument();
 
       renderer.destroy('modal-1');
       expect(document.querySelector('.dap-overlay-backdrop')).not.toBeInTheDocument();
     });
 
-    it('should handle destroying non-existent step gracefully', () => {
+    it('should handle destroying non-existent step gracefully', async () => {
       expect(() => {
         renderer.destroy('nonexistent');
       }).not.toThrow();
@@ -442,7 +442,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('DestroyAll', () => {
-    it('should remove all overlays', () => {
+    it('should remove all overlays', async () => {
       const step1: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -455,8 +455,8 @@ describe('OverlayRenderer', () => {
         content: { body: 'Test 2' },
       };
 
-      renderer.render(step1);
-      renderer.render(step2);
+      await renderer.render(step1);
+      await renderer.render(step2);
 
       expect(document.querySelector('[data-step-id="banner-1"]')).toBeInTheDocument();
       expect(document.querySelector('[data-step-id="banner-2"]')).toBeInTheDocument();
@@ -467,7 +467,7 @@ describe('OverlayRenderer', () => {
       expect(document.querySelector('[data-step-id="banner-2"]')).not.toBeInTheDocument();
     });
 
-    it('should remove all event listeners', () => {
+    it('should remove all event listeners', async () => {
       const step1: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -480,8 +480,8 @@ describe('OverlayRenderer', () => {
         content: { body: 'Test 2' },
       };
 
-      renderer.render(step1);
-      renderer.render(step2);
+      await renderer.render(step1);
+      await renderer.render(step2);
 
       renderer.destroyAll();
 
@@ -495,7 +495,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('Re-rendering', () => {
-    it('should replace existing overlay when re-rendering same step', () => {
+    it('should replace existing overlay when re-rendering same step', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -504,7 +504,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
       expect(document.querySelectorAll('[data-step-id="banner-1"]')).toHaveLength(1);
 
       const updatedStep: Step = {
@@ -514,7 +514,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(updatedStep);
+      await renderer.render(updatedStep);
 
       // Should still have only one overlay
       expect(document.querySelectorAll('[data-step-id="banner-1"]')).toHaveLength(1);
@@ -523,7 +523,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('ARIA attributes', () => {
-    it('should set correct role for tooltip', () => {
+    it('should set correct role for tooltip', async () => {
       const step: Step = {
         id: 'tooltip-1',
         type: 'tooltip',
@@ -533,13 +533,13 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const overlay = document.querySelector('[data-step-id="tooltip-1"]');
       expect(overlay).toHaveAttribute('role', 'tooltip');
     });
 
-    it('should set correct role for modal', () => {
+    it('should set correct role for modal', async () => {
       const step: Step = {
         id: 'modal-1',
         type: 'modal',
@@ -548,13 +548,13 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const overlay = document.querySelector('.dap-overlay--modal[data-step-id="modal-1"]');
       expect(overlay).toHaveAttribute('role', 'dialog');
     });
 
-    it('should set aria-live attribute', () => {
+    it('should set aria-live attribute', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -563,7 +563,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const overlay = document.querySelector('[data-step-id="banner-1"]');
       expect(overlay).toHaveAttribute('aria-live', 'polite');
@@ -571,7 +571,7 @@ describe('OverlayRenderer', () => {
   });
 
   describe('HTML escaping', () => {
-    it('should escape title to prevent XSS', () => {
+    it('should escape title to prevent XSS', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -581,14 +581,14 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const title = document.querySelector('.dap-overlay__title');
       expect(title?.querySelector('script')).toBeNull();
       expect(title?.innerHTML).toContain('&lt;script&gt;');
     });
 
-    it('should escape CTA label to prevent XSS', () => {
+    it('should escape CTA label to prevent XSS', async () => {
       const step: Step = {
         id: 'banner-1',
         type: 'banner',
@@ -603,7 +603,7 @@ describe('OverlayRenderer', () => {
         },
       };
 
-      renderer.render(step);
+      await renderer.render(step);
 
       const cta = document.querySelector('.dap-overlay__cta');
       expect(cta?.querySelector('img')).toBeNull();

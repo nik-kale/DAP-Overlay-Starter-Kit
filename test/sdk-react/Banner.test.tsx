@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { Banner } from '../../packages/sdk-react/src/components/Banner';
 import type { Step } from '@dap-overlay/sdk-core';
 
@@ -145,7 +145,7 @@ describe('Banner Component', () => {
     expect(screen.queryByRole('button', { name: /learn more/i })).not.toBeInTheDocument();
   });
 
-  it('should render sanitized HTML when allowHtml is true', () => {
+  it('should render sanitized HTML when allowHtml is true', async () => {
     const stepWithHtml = {
       ...mockStep,
       content: {
@@ -164,8 +164,11 @@ describe('Banner Component', () => {
       />
     );
 
-    const emElement = screen.getByText('Italic text');
-    expect(emElement.tagName).toBe('EM');
+    // Wait for async HTML sanitization to complete
+    await waitFor(() => {
+      const emElement = screen.getByText('Italic text');
+      expect(emElement.tagName).toBe('EM');
+    });
   });
 
   it('should have correct ARIA attributes', () => {

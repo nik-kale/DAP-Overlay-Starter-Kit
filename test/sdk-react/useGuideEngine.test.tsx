@@ -46,15 +46,16 @@ describe('useGuideEngine Hook', () => {
     cleanup();
   });
 
-  it('should initialize with loading state', () => {
+  it('should initialize immediately (no async validation)', () => {
     const { result } = renderHook(() =>
       useGuideEngine({
         steps: mockSteps,
       })
     );
 
-    // Initially loading
-    expect(result.current.isLoading).toBe(true);
+    // No loading state since validation was removed for bundle size
+    // Initialization is now synchronous
+    expect(result.current.isLoading).toBe(false);
   });
 
   it('should set isLoading to false after initialization', async () => {

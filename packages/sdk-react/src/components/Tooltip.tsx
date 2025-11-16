@@ -4,8 +4,8 @@
 
 import { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import type { Step } from '@dap-overlay/sdk-core';
-import { sanitizeHtml } from '@dap-overlay/sdk-core';
 import { usePopper } from '../hooks/usePopper.js';
+import { useSanitizedHtml } from '../hooks/useSanitizedHtml.js';
 
 export interface TooltipProps {
   step: Step;
@@ -16,6 +16,12 @@ export interface TooltipProps {
 
 function TooltipComponent({ step, onDismiss, onCtaClick, onShow }: TooltipProps) {
   const [anchorElement, setAnchorElement] = useState<HTMLElement | null>(null);
+
+  // Sanitize HTML content if needed
+  const sanitizedBody = useSanitizedHtml(
+    step.content.body,
+    step.content.allowHtml || false
+  );
 
   // Memoize popper options to prevent recreation
   const popperOptions = useMemo(
@@ -85,7 +91,7 @@ function TooltipComponent({ step, onDismiss, onCtaClick, onShow }: TooltipProps)
 
       <div className="dap-overlay-react__body">
         {step.content.allowHtml ? (
-          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(step.content.body) }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizedBody }} />
         ) : (
           <p>{step.content.body}</p>
         )}
