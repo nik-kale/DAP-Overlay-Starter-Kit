@@ -1,0 +1,62 @@
+/* DAP Overlay Vanilla SDK Dark Mode Theme */
+
+@media (prefers-color-scheme: dark) {
+  .dap-overlay {
+    --dap-overlay-bg: #1e1e1e;
+    --dap-overlay-text: #e0e0e0;
+    --dap-overlay-border: #3a3a3a;
+    --dap-overlay-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .dap-overlay__close {
+    color: #a0a0a0;
+  }
+
+  .dap-overlay__close:hover {
+    color: var(--dap-overlay-text);
+  }
+
+  .dap-overlay__cta {
+    background: #0366d6;
+  }
+
+  .dap-overlay__cta:hover {
+    background: #0551b5;
+  }
+
+  .dap-overlay__cta:active {
+    background: #044289;
+  }
+
+  .dap-overlay-backdrop {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* Explicit dark mode class (for manual theme switching) */
+.dap-overlay.dap-overlay--dark-mode {
+  --dap-overlay-bg: #1e1e1e;
+  --dap-overlay-text: #e0e0e0;
+  --dap-overlay-border: #3a3a3a;
+  --dap-overlay-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.dap-overlay--dark-mode .dap-overlay__close {
+  color: #a0a0a0;
+}
+
+.dap-overlay--dark-mode .dap-overlay__close:hover {
+  color: var(--dap-overlay-text);
+}
+
+.dap-overlay--dark-mode .dap-overlay__cta {
+  background: #0366d6;
+}
+
+.dap-overlay--dark-mode .dap-overlay__cta:hover {
+  background: #0551b5;
+}
+
+.dap-overlay--dark-mode .dap-overlay__cta:active {
+  background: #044289;
+}

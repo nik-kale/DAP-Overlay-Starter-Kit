@@ -130,4 +130,5 @@ export interface DebugOptions {
   logConditionEvaluation?: boolean;
   logStepResolution?: boolean;
   logTelemetry?: boolean;
+  logCallbacks?: boolean;
 }

@@ -12,14 +12,15 @@
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./styles-dark.css": "./dist/styles-dark.css"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsup && npm run build:css",
-    "build:css": "cp src/styles.css dist/styles.css",
+    "build:css": "cp src/styles.css dist/styles.css && cp src/styles-dark.css dist/styles-dark.css",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
