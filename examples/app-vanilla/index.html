@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DAP Overlay SDK - Vanilla JS Demo</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <h1>DAP Overlay SDK - Vanilla JS Demo</h1>
+
+      <div class="card">
+        <h2>Controls</h2>
+        <div class="controls">
+          <div class="control-group">
+            <label>
+              <input type="checkbox" id="use-mock" checked />
+              Use Mock Telemetry
+            </label>
+          </div>
+
+          <div class="control-group">
+            <label for="error-select">Simulate Error:</label>
+            <select id="error-select">
+              <option value="">None</option>
+              <option value="AUTH_401">AUTH_401 - Authentication Error</option>
+              <option value="NETWORK_TIMEOUT">NETWORK_TIMEOUT - Network Timeout</option>
+              <option value="VALIDATION_ERROR">VALIDATION_ERROR - Form Validation</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="path-select">Current Path:</label>
+            <select id="path-select">
+              <option value="/dashboard">/dashboard</option>
+              <option value="/settings">/settings</option>
+              <option value="/profile">/profile</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <button id="update-context">Update Context</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>Demo Elements</h2>
+        <p>These buttons are targets for overlay tooltips:</p>
+        <div class="demo-buttons">
+          <button id="login-button">Login</button>
+          <button id="export-button">Export Data</button>
+          <button id="settings-button">Settings</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Instructions</h2>
+        <ol>
+          <li>Select an error from the dropdown</li>
+          <li>Click "Update Context" to trigger overlays</li>
+          <li>Change the path to see path-based tooltips (like feature highlights)</li>
+          <li>Toggle mock/real mode to switch between local and API telemetry</li>
+          <li>Click on overlay CTAs to trigger callbacks</li>
+        </ol>
+      </div>
+    </div>
+
+    <script type="module" src="/src/demo.js"></script>
+  </body>
+</html>

@@ -1,0 +1,231 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dap-overlay.dev/schemas/steps.schema.json",
+  "title": "DAP Overlay Steps Schema",
+  "description": "Schema for defining contextual overlay steps (tooltips, banners, modals)",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "const": "1.0"
+    },
+    "steps": {
+      "type": "array",
+      "description": "Array of overlay steps",
+      "items": {
+        "$ref": "#/$defs/Step"
+      }
+    }
+  },
+  "required": ["version", "steps"],
+  "additionalProperties": false,
+  "$defs": {
+    "Step": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the step"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["tooltip", "banner", "modal"],
+          "description": "Type of overlay"
+        },
+        "selector": {
+          "type": "string",
+          "description": "CSS selector for anchor element (optional for banners)"
+        },
+        "content": {
+          "$ref": "#/$defs/Content"
+        },
+        "when": {
+          "$ref": "#/$defs/Conditions"
+        },
+        "popper": {
+          "$ref": "#/$defs/PopperOptions"
+        },
+        "actions": {
+          "$ref": "#/$defs/Actions"
+        },
+        "telemetry": {
+          "$ref": "#/$defs/TelemetryHooks"
+        }
+      },
+      "required": ["id", "type", "content", "when"],
+      "additionalProperties": false
+    },
+    "Content": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title text (plain string)"
+        },
+        "body": {
+          "type": "string",
+          "description": "Body text (plain string or sanitized HTML)"
+        },
+        "allowHtml": {
+          "type": "boolean",
+          "description": "Whether body contains HTML (will be sanitized via DOMPurify)",
+          "default": false
+        }
+      },
+      "required": ["body"],
+      "additionalProperties": false
+    },
+    "Conditions": {
+      "type": "object",
+      "description": "Conditions for when the step should be shown",
+      "properties": {
+        "errorId": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "Error ID(s) that trigger this step"
+        },
+        "pathRegex": {
+          "type": "string",
+          "description": "Regex pattern to match current path"
+        },
+        "customExpr": {
+          "$ref": "#/$defs/PredicateExpression"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PredicateExpression": {
+      "type": "object",
+      "description": "Safe predicate DSL (no eval)",
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["equals", "notEquals", "contains", "and", "or", "not", "greaterThan", "lessThan"]
+        },
+        "field": {
+          "type": "string",
+          "description": "Field path (e.g., 'telemetry.errorCode')"
+        },
+        "value": {
+          "description": "Value to compare against"
+        },
+        "operands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PredicateExpression"
+          },
+          "description": "For logical operators (and, or, not)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PopperOptions": {
+      "type": "object",
+      "description": "Popper.js positioning options",
+      "properties": {
+        "placement": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "auto-start",
+            "auto-end",
+            "top",
+            "top-start",
+            "top-end",
+            "bottom",
+            "bottom-start",
+            "bottom-end",
+            "right",
+            "right-start",
+            "right-end",
+            "left",
+            "left-start",
+            "left-end"
+          ],
+          "default": "auto"
+        },
+        "strategy": {
+          "type": "string",
+          "enum": ["absolute", "fixed"],
+          "default": "absolute"
+        },
+        "offset": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[skidding, distance]",
+          "default": [0, 8]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Actions": {
+      "type": "object",
+      "properties": {
+        "onShow": {
+          "type": "string",
+          "description": "Callback ID to invoke when shown"
+        },
+        "onDismiss": {
+          "type": "string",
+          "description": "Callback ID to invoke when dismissed"
+        },
+        "cta": {
+          "$ref": "#/$defs/CallToAction"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CallToAction": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "CTA button label"
+        },
+        "callbackId": {
+          "type": "string",
+          "description": "Callback ID to invoke on click"
+        },
+        "dismissOnClick": {
+          "type": "boolean",
+          "description": "Whether to dismiss overlay after CTA click",
+          "default": true
+        }
+      },
+      "required": ["label", "callbackId"],
+      "additionalProperties": false
+    },
+    "TelemetryHooks": {
+      "type": "object",
+      "properties": {
+        "onShowEvent": {
+          "type": "string",
+          "description": "Event name to emit when shown"
+        },
+        "onDismissEvent": {
+          "type": "string",
+          "description": "Event name to emit when dismissed"
+        },
+        "onCtaClickEvent": {
+          "type": "string",
+          "description": "Event name to emit on CTA click"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

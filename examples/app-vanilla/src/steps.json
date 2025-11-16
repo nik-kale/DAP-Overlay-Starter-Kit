@@ -1,0 +1,111 @@
+{
+  "version": "1.0",
+  "steps": [
+    {
+      "id": "auth-error-tooltip",
+      "type": "tooltip",
+      "selector": "#login-button",
+      "content": {
+        "title": "Authentication Issue",
+        "body": "We're having trouble logging you in. Please check your credentials and try again.",
+        "allowHtml": false
+      },
+      "when": {
+        "errorId": "AUTH_401"
+      },
+      "popper": {
+        "placement": "bottom",
+        "offset": [0, 8]
+      },
+      "actions": {
+        "cta": {
+          "label": "Retry Login",
+          "callbackId": "retryLogin",
+          "dismissOnClick": true
+        }
+      },
+      "telemetry": {
+        "onShowEvent": "auth_tooltip_shown",
+        "onDismissEvent": "auth_tooltip_dismissed",
+        "onCtaClickEvent": "auth_retry_clicked"
+      }
+    },
+    {
+      "id": "network-error-banner",
+      "type": "banner",
+      "content": {
+        "title": "Network Issue",
+        "body": "Your request timed out. Please check your internet connection and try again.",
+        "allowHtml": false
+      },
+      "when": {
+        "errorId": "NETWORK_TIMEOUT"
+      },
+      "actions": {
+        "cta": {
+          "label": "Refresh",
+          "callbackId": "refreshPage",
+          "dismissOnClick": true
+        }
+      },
+      "telemetry": {
+        "onShowEvent": "network_banner_shown",
+        "onDismissEvent": "network_banner_dismissed",
+        "onCtaClickEvent": "network_refresh_clicked"
+      }
+    },
+    {
+      "id": "validation-modal",
+      "type": "modal",
+      "content": {
+        "title": "Form Validation Error",
+        "body": "<p>Please fix the following errors:</p><ul><li>Email address is required</li><li>Password must be at least 8 characters</li></ul>",
+        "allowHtml": true
+      },
+      "when": {
+        "errorId": "VALIDATION_ERROR"
+      },
+      "actions": {
+        "cta": {
+          "label": "Got it",
+          "callbackId": "dismissValidation",
+          "dismissOnClick": true
+        }
+      },
+      "telemetry": {
+        "onShowEvent": "validation_modal_shown",
+        "onDismissEvent": "validation_modal_dismissed",
+        "onCtaClickEvent": "validation_modal_cta_clicked"
+      }
+    },
+    {
+      "id": "feature-highlight",
+      "type": "tooltip",
+      "selector": "#export-button",
+      "content": {
+        "title": "New Feature",
+        "body": "Try our new export feature! You can now export your data in multiple formats.",
+        "allowHtml": false
+      },
+      "when": {
+        "pathRegex": "/dashboard"
+      },
+      "popper": {
+        "placement": "left",
+        "offset": [0, 12]
+      },
+      "actions": {
+        "cta": {
+          "label": "Try it",
+          "callbackId": "tryExport",
+          "dismissOnClick": true
+        }
+      },
+      "telemetry": {
+        "onShowEvent": "feature_tooltip_shown",
+        "onDismissEvent": "feature_tooltip_dismissed",
+        "onCtaClickEvent": "feature_try_clicked"
+      }
+    }
+  ]
+}

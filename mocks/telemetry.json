@@ -1,0 +1,43 @@
+{
+  "errors": [
+    {
+      "errorId": "AUTH_401",
+      "errorCode": "UNAUTHORIZED",
+      "message": "Authentication failed",
+      "timestamp": 1699999999000,
+      "severity": "error"
+    },
+    {
+      "errorId": "NETWORK_TIMEOUT",
+      "errorCode": "TIMEOUT",
+      "message": "Request timed out",
+      "timestamp": 1699999999000,
+      "severity": "warning"
+    },
+    {
+      "errorId": "VALIDATION_ERROR",
+      "errorCode": "INVALID_INPUT",
+      "message": "Form validation failed",
+      "timestamp": 1699999999000,
+      "severity": "error"
+    }
+  ],
+  "events": [
+    {
+      "eventName": "page_view",
+      "payload": {
+        "path": "/dashboard",
+        "referrer": "/"
+      },
+      "timestamp": 1699999999000
+    },
+    {
+      "eventName": "feature_used",
+      "payload": {
+        "feature": "export",
+        "format": "csv"
+      },
+      "timestamp": 1699999999000
+    }
+  ]
+}

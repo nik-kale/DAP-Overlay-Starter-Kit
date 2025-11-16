@@ -1,0 +1,14 @@
+{
+  "name": "@dap-overlay/mocks",
+  "version": "0.1.0",
+  "description": "Mock telemetry server for DAP Overlay SDK",
+  "type": "module",
+  "main": "./server.ts",
+  "scripts": {},
+  "dependencies": {
+    "msw": "^2.0.11"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
