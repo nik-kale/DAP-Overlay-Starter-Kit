@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   OverlayOrchestrator,
   useGuideEngine,
@@ -17,13 +17,22 @@ function App() {
   const [errorId, setErrorId] = useState<string>('');
   const [path, setPath] = useState<string>('/dashboard');
 
-  const telemetryClient = new TelemetryClient({
-    baseUrl: import.meta.env.VITE_API_BASE_URL,
-    useMock,
-  });
+  // Memoize telemetry client to prevent memory leaks
+  const telemetryClient = useMemo(
+    () =>
+      new TelemetryClient({
+        baseUrl: import.meta.env.VITE_API_BASE_URL,
+        useMock,
+      }),
+    [useMock]
+  );
 
-  const telemetryContext: TelemetryContext = errorId ? { errorId } : {};
-  const routeContext: RouteContext = { path };
+  // Memoize contexts to prevent unnecessary re-renders
+  const telemetryContext: TelemetryContext = useMemo(
+    () => (errorId ? { errorId } : {}),
+    [errorId]
+  );
+  const routeContext: RouteContext = useMemo(() => ({ path }), [path]);
 
   const {
     activeSteps,

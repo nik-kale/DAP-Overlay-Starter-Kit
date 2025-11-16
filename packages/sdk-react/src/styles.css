@@ -195,3 +195,12 @@
   border-right: none;
   border-top: none;
 }
+
+/* Accessibility: Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .dap-overlay-react,
+  .dap-overlay-react-backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+}

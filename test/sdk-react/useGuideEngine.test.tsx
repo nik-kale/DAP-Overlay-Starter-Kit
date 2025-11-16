@@ -21,10 +21,8 @@ describe('useGuideEngine Hook', () => {
           title: 'Welcome',
           body: 'Welcome to the app',
         },
-        targeting: {
-          conditions: {
-            path: '/',
-          },
+        when: {
+          pathRegex: '^/$',
         },
       },
       {
@@ -35,10 +33,8 @@ describe('useGuideEngine Hook', () => {
           title: 'Click here',
           body: 'This is a button',
         },
-        targeting: {
-          conditions: {
-            path: '/dashboard',
-          },
+        when: {
+          pathRegex: '^/dashboard$',
         },
       },
     ];
@@ -225,8 +221,8 @@ describe('useGuideEngine Hook', () => {
           // dismissOnClick defaults to true
         },
       },
-      targeting: {
-        conditions: { path: '/' },
+      when: {
+        pathRegex: '^/$',
       },
     };
 
@@ -260,8 +256,8 @@ describe('useGuideEngine Hook', () => {
           dismissOnClick: false,
         },
       },
-      targeting: {
-        conditions: { path: '/' },
+      when: {
+        pathRegex: '^/$',
       },
     };
 
@@ -313,12 +309,12 @@ describe('useGuideEngine Hook', () => {
       id: 'step-telemetry',
       type: 'banner',
       content: { body: 'Test' },
-      targeting: {
-        conditions: {
-          path: '/',
-          telemetry: {
-            hasCompletedOnboarding: true,
-          },
+      when: {
+        pathRegex: '^/$',
+        customExpr: {
+          op: 'equals',
+          field: 'telemetry.hasCompletedOnboarding',
+          value: true,
         },
       },
     };

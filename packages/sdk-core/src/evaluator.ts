@@ -94,7 +94,21 @@ function evaluatePredicate(expr: PredicateExpression, context: EvaluationContext
 /**
  * Evaluate all conditions for a step
  */
-export function evaluateConditions(conditions: Conditions, context: EvaluationContext): boolean {
+export function evaluateConditions(conditions: Conditions | undefined, context: EvaluationContext): boolean {
+  if (!conditions) {
+    return false;
+  }
+
+  // Validate that at least one condition is specified (prevent empty condition objects)
+  const hasConditions = Boolean(
+    conditions.pathRegex || conditions.errorId || conditions.customExpr
+  );
+
+  if (!hasConditions) {
+    console.warn('[DAP Overlay] Empty conditions object - step will never match. Please specify at least one condition.');
+    return false;
+  }
+
   let matches = true;
 
   // Check errorId condition

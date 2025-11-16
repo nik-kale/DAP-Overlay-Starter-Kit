@@ -132,3 +132,16 @@ export interface DebugOptions {
   logTelemetry?: boolean;
   logCallbacks?: boolean;
 }
+
+// Telemetry event types for better type safety
+export enum TelemetryEventType {
+  OVERLAY_SHOWN = 'overlay_shown',
+  OVERLAY_DISMISSED = 'overlay_dismissed',
+  CTA_CLICKED = 'cta_clicked',
+  CALLBACK_EXECUTED = 'callback_executed',
+  STEP_RESOLVED = 'step_resolved',
+  ERROR_OCCURRED = 'error_occurred',
+}
+
+// SDK Version for tracking and debugging
+export const SDK_VERSION = '0.1.0';

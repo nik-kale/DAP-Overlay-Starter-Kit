@@ -200,3 +200,12 @@
 .dap-overlay--hidden {
   display: none;
 }
+
+/* Accessibility: Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .dap-overlay,
+  .dap-overlay-backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+}
