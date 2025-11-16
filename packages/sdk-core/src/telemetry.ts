@@ -1,25 +1,59 @@
 /**
  * Telemetry client for fetching telemetry data and emitting events
  * Supports both mock (local) and real (API) modes
+ * Includes retry logic and rate limiting for reliability and security
  */
 
 import type { TelemetryContext, TelemetryEvent } from './types.js';
+import { retry, RateLimiter } from './utils.js';
 
 export interface TelemetryClientOptions {
   baseUrl?: string;
   useMock?: boolean;
   mockData?: TelemetryContext;
+  /**
+   * Enable retry logic for failed telemetry requests
+   * Default: true
+   */
+  enableRetry?: boolean;
+  /**
+   * Maximum retry attempts
+   * Default: 3
+   */
+  maxRetries?: number;
+  /**
+   * Enable rate limiting to prevent excessive telemetry calls
+   * Default: true
+   */
+  enableRateLimit?: boolean;
+  /**
+   * Maximum telemetry events per second
+   * Default: 10
+   */
+  maxEventsPerSecond?: number;
 }
 
 export class TelemetryClient {
   private baseUrl: string;
   private useMock: boolean;
   private mockData: TelemetryContext;
+  private enableRetry: boolean;
+  private maxRetries: number;
+  private rateLimiter: RateLimiter | null;
 
   constructor(options: TelemetryClientOptions = {}) {
     this.baseUrl = options.baseUrl || 'http://localhost:3000';
     this.useMock = options.useMock ?? true;
     this.mockData = options.mockData || {};
+    this.enableRetry = options.enableRetry ?? true;
+    this.maxRetries = options.maxRetries ?? 3;
+
+    // Initialize rate limiter if enabled
+    const enableRateLimit = options.enableRateLimit ?? true;
+    const maxEventsPerSecond = options.maxEventsPerSecond ?? 10;
+    this.rateLimiter = enableRateLimit
+      ? new RateLimiter(maxEventsPerSecond, maxEventsPerSecond)
+      : null;
   }
 
   /**
@@ -58,6 +92,12 @@ export class TelemetryClient {
    * Emit a telemetry event
    */
   async emit(eventName: string, payload: Record<string, unknown> = {}): Promise<void> {
+    // Check rate limit
+    if (this.rateLimiter && !this.rateLimiter.tryConsume()) {
+      console.warn('[DAP Overlay] Telemetry event rate limit exceeded, event dropped:', eventName);
+      return;
+    }
+
     const event: TelemetryEvent = {
       eventName,
       payload,
@@ -70,7 +110,7 @@ export class TelemetryClient {
       return;
     }
 
-    try {
+    const sendEvent = async () => {
       const response = await fetch(`${this.baseUrl}/api/telemetry/emit`, {
         method: 'POST',
         headers: {
@@ -82,8 +122,22 @@ export class TelemetryClient {
       if (!response.ok) {
         throw new Error(`Telemetry emit failed: ${response.statusText}`);
       }
+    };
+
+    try {
+      if (this.enableRetry) {
+        await retry(sendEvent, {
+          maxAttempts: this.maxRetries,
+          baseDelay: 1000,
+          onRetry: (attempt, error) => {
+            console.warn(`[DAP Overlay] Retrying telemetry event (attempt ${attempt}):`, error.message);
+          },
+        });
+      } else {
+        await sendEvent();
+      }
     } catch (error) {
-      console.error('Failed to emit telemetry:', error);
+      console.error('[DAP Overlay] Failed to emit telemetry after retries:', error);
     }
   }
 

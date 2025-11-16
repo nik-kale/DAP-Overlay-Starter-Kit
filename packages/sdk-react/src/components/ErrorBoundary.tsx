@@ -1,22 +1,22 @@
 /**
- * Error Boundary for overlay components
- * Prevents a single overlay error from crashing the entire app
+ * Error Boundary component to catch and handle React errors gracefully
+ * Prevents entire app from crashing when an overlay has an error
  */
 
-import { Component, type ReactNode } from 'react';
+import { Component, type ReactNode, type ErrorInfo } from 'react';
 
-export interface ErrorBoundaryProps {
+interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
-export interface ErrorBoundaryState {
+interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
 
-export class OverlayErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -26,21 +26,24 @@ export class OverlayErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log error to console
     console.error('Overlay Error Boundary caught error:', error, errorInfo);
 
+    // Call custom error handler if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
   }
 
-  render(): ReactNode {
+  render() {
     if (this.state.hasError) {
+      // Custom fallback UI if provided
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Default fallback - just hide the overlay silently
+      // Default fallback UI (hidden, non-intrusive)
       return null;
     }
 

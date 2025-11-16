@@ -12,7 +12,7 @@ export { Tooltip } from './components/Tooltip.js';
 export { Banner } from './components/Banner.js';
 export { Modal } from './components/Modal.js';
 export { OverlayOrchestrator } from './components/OverlayOrchestrator.js';
-export { OverlayErrorBoundary } from './components/ErrorBoundary.js';
+export { ErrorBoundary } from './components/ErrorBoundary.js';
 
 // Re-export core types and utilities
 export * from '@dap-overlay/sdk-core';

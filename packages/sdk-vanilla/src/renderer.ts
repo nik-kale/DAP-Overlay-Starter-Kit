@@ -15,6 +15,7 @@ export class OverlayRenderer {
   private popperInstances: Map<string, PopperInstance> = new Map();
   private overlayElements: Map<string, HTMLElement> = new Map();
   private eventListeners: Map<string, Array<{ element: EventTarget; type: string; handler: EventListener }>> = new Map();
+  private autoDismissTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private callbacks: RendererCallbacks;
 
   constructor(callbacks: RendererCallbacks) {
@@ -37,6 +38,14 @@ export class OverlayRenderer {
       this.renderBanner(overlay);
     } else if (step.type === 'modal') {
       this.renderModal(overlay);
+    }
+
+    // Setup auto-dismiss timer if configured
+    if (step.actions?.autoDismissMs && step.actions.autoDismissMs > 0) {
+      const timer = setTimeout(() => {
+        this.callbacks.onDismiss(step.id);
+      }, step.actions.autoDismissMs);
+      this.autoDismissTimers.set(step.id, timer);
     }
   }
 
@@ -146,7 +155,7 @@ export class OverlayRenderer {
       // ESC key handler (listens on document)
       const handleEsc = (e: Event) => {
         const keyEvent = e as KeyboardEvent;
-        if (keyEvent.key === 'Escape') {
+        if (keyEvent.key === 'Escape' && !step.behavior?.preventEscapeDismiss) {
           this.callbacks.onDismiss(step.id);
         }
       };
@@ -279,6 +288,13 @@ export class OverlayRenderer {
    * Destroy/remove an overlay
    */
   destroy(stepId: string): void {
+    // Clear auto-dismiss timer if it exists
+    const timer = this.autoDismissTimers.get(stepId);
+    if (timer) {
+      clearTimeout(timer);
+      this.autoDismissTimers.delete(stepId);
+    }
+
     // Remove event listeners first to prevent memory leaks
     const listeners = this.eventListeners.get(stepId);
     if (listeners) {

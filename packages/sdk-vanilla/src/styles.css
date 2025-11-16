@@ -209,3 +209,74 @@
     transition: none !important;
   }
 }
+
+/* Accessibility: High contrast mode support */
+@media (prefers-contrast: high) {
+  .dap-overlay {
+    border: 2px solid var(--dap-overlay-text);
+    background: var(--dap-overlay-bg);
+  }
+
+  .dap-overlay__close,
+  .dap-overlay__cta {
+    border: 2px solid currentColor;
+  }
+
+  .dap-overlay-backdrop {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .dap-overlay {
+    max-width: 90vw;
+    font-size: 14px;
+  }
+
+  .dap-overlay--modal {
+    width: 90vw;
+    max-width: 90vw;
+    padding: 16px;
+  }
+
+  .dap-overlay--tooltip {
+    max-width: 85vw;
+  }
+
+  .dap-overlay__title {
+    font-size: 14px;
+  }
+
+  .dap-overlay__cta {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  /* Stack header elements on very small screens */
+  @media (max-width: 360px) {
+    .dap-overlay__header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .dap-overlay__close {
+      align-self: flex-end;
+    }
+  }
+}
+
+/* Touch-friendly sizing for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .dap-overlay__close {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  .dap-overlay__cta {
+    min-height: 44px;
+    padding: 12px 20px;
+  }
+}

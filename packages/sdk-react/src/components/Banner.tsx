@@ -34,9 +34,37 @@ function BannerComponent({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
     onDismiss(step);
   }, [onDismiss, step]);
 
+  // Auto-dismiss timer for banners
+  useEffect(() => {
+    if (step.actions?.autoDismissMs && step.actions.autoDismissMs > 0) {
+      const timer = setTimeout(() => {
+        handleDismiss();
+      }, step.actions.autoDismissMs);
+
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [step.actions?.autoDismissMs, handleDismiss]);
+
   const handleCtaClick = useCallback(() => {
     onCtaClick(step);
   }, [onCtaClick, step]);
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (step.behavior?.enableKeyboardShortcuts === false) {
+      return;
+    }
+
+    // Enter or Space on CTA button
+    if (e.key === 'Enter' || e.key === ' ') {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('dap-overlay-react__cta')) {
+        e.preventDefault();
+        handleCtaClick();
+      }
+    }
+  }, [step.behavior?.enableKeyboardShortcuts, handleCtaClick]);
 
   return (
     <div
@@ -44,6 +72,7 @@ function BannerComponent({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
       role="status"
       aria-live="polite"
       style={step.style ? { zIndex: step.style.zIndex, ...step.style } : undefined}
+      onKeyDown={handleKeyDown}
     >
       <div className="dap-overlay-react__header">
         {step.content.title && <h3 className="dap-overlay-react__title">{step.content.title}</h3>}

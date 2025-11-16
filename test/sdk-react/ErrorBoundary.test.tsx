@@ -1,10 +1,10 @@
 /**
- * Tests for OverlayErrorBoundary component
+ * Tests for ErrorBoundary component
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { OverlayErrorBoundary } from '../../packages/sdk-react/src/components/ErrorBoundary';
+import { ErrorBoundary } from '../../packages/sdk-react/src/components/ErrorBoundary';
 
 // Component that throws an error
 function ThrowError({ shouldThrow }: { shouldThrow: boolean }) {
@@ -14,7 +14,7 @@ function ThrowError({ shouldThrow }: { shouldThrow: boolean }) {
   return <div>No error</div>;
 }
 
-describe('OverlayErrorBoundary Component', () => {
+describe('ErrorBoundary Component', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
@@ -28,9 +28,9 @@ describe('OverlayErrorBoundary Component', () => {
 
   it('should render children when no error occurs', () => {
     render(
-      <OverlayErrorBoundary>
+      <ErrorBoundary>
         <div>Test content</div>
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(screen.getByText('Test content')).toBeInTheDocument();
@@ -38,9 +38,9 @@ describe('OverlayErrorBoundary Component', () => {
 
   it('should render null when error occurs with no fallback', () => {
     const { container } = render(
-      <OverlayErrorBoundary>
+      <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(container.firstChild).toBeNull();
@@ -50,9 +50,9 @@ describe('OverlayErrorBoundary Component', () => {
     const fallback = <div>Custom error fallback</div>;
 
     render(
-      <OverlayErrorBoundary fallback={fallback}>
+      <ErrorBoundary fallback={fallback}>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(screen.getByText('Custom error fallback')).toBeInTheDocument();
@@ -62,9 +62,9 @@ describe('OverlayErrorBoundary Component', () => {
     const onError = vi.fn();
 
     render(
-      <OverlayErrorBoundary onError={onError}>
+      <ErrorBoundary onError={onError}>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(onError).toHaveBeenCalledTimes(1);
@@ -81,9 +81,9 @@ describe('OverlayErrorBoundary Component', () => {
 
   it('should log error to console.error', () => {
     render(
-      <OverlayErrorBoundary>
+      <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -97,9 +97,9 @@ describe('OverlayErrorBoundary Component', () => {
 
   it('should recover when error is fixed', () => {
     const { rerender } = render(
-      <OverlayErrorBoundary>
+      <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     // Initially shows nothing (error state)
@@ -111,9 +111,9 @@ describe('OverlayErrorBoundary Component', () => {
     // or use a reset mechanism with state
 
     rerender(
-      <OverlayErrorBoundary>
+      <ErrorBoundary>
         <ThrowError shouldThrow={false} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     // Still in error state after rerender
@@ -133,9 +133,9 @@ describe('OverlayErrorBoundary Component', () => {
     }
 
     render(
-      <OverlayErrorBoundary onError={onError}>
+      <ErrorBoundary onError={onError}>
         <Parent />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(onError).toHaveBeenCalledTimes(1);
@@ -146,9 +146,9 @@ describe('OverlayErrorBoundary Component', () => {
     const onError = vi.fn();
 
     render(
-      <OverlayErrorBoundary onError={onError}>
+      <ErrorBoundary onError={onError}>
         <div>Normal content</div>
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(onError).not.toHaveBeenCalled();
@@ -159,9 +159,9 @@ describe('OverlayErrorBoundary Component', () => {
     const fallback = <div>Error occurred</div>;
 
     render(
-      <OverlayErrorBoundary fallback={fallback} onError={onError}>
+      <ErrorBoundary fallback={fallback} onError={onError}>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(screen.getByText('Error occurred')).toBeInTheDocument();
@@ -170,11 +170,11 @@ describe('OverlayErrorBoundary Component', () => {
 
   it('should handle multiple children without error', () => {
     render(
-      <OverlayErrorBoundary>
+      <ErrorBoundary>
         <div>Child 1</div>
         <div>Child 2</div>
         <div>Child 3</div>
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(screen.getByText('Child 1')).toBeInTheDocument();
@@ -186,18 +186,18 @@ describe('OverlayErrorBoundary Component', () => {
     const onError = vi.fn();
 
     const { rerender } = render(
-      <OverlayErrorBoundary onError={onError}>
+      <ErrorBoundary onError={onError}>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     expect(onError).toHaveBeenCalledTimes(1);
 
     // Rerender with same props
     rerender(
-      <OverlayErrorBoundary onError={onError}>
+      <ErrorBoundary onError={onError}>
         <ThrowError shouldThrow={true} />
-      </OverlayErrorBoundary>
+      </ErrorBoundary>
     );
 
     // Should not call onError again

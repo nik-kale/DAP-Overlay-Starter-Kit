@@ -68,6 +68,11 @@ export interface Actions {
   onShow?: string;
   onDismiss?: string;
   cta?: CallToAction;
+  /**
+   * Auto-dismiss the overlay after specified milliseconds
+   * Useful for banners and non-critical notifications
+   */
+  autoDismissMs?: number;
 }
 
 export interface TelemetryHooks {
@@ -81,6 +86,24 @@ export interface StepStyle {
   [key: string]: unknown;
 }
 
+export interface StepBehavior {
+  /**
+   * Enable keyboard shortcuts
+   * Default: true for all overlay types
+   */
+  enableKeyboardShortcuts?: boolean;
+  /**
+   * Prevent closing overlay by clicking backdrop (modals only)
+   * Default: false (backdrop click dismisses)
+   */
+  preventBackdropDismiss?: boolean;
+  /**
+   * Prevent closing overlay with ESC key
+   * Default: false (ESC key dismisses)
+   */
+  preventEscapeDismiss?: boolean;
+}
+
 export interface Step {
   id: string;
   type: StepType;
@@ -91,6 +114,7 @@ export interface Step {
   actions?: Actions;
   telemetry?: TelemetryHooks;
   style?: StepStyle;
+  behavior?: StepBehavior;
 }
 
 export interface StepsDocument {

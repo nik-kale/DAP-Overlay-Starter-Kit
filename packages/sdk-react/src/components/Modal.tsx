@@ -45,6 +45,9 @@ function ModalComponent({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
   // ESC key handler
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
+      if (step.behavior?.preventEscapeDismiss) {
+        return;
+      }
       if (e.key === 'Escape') {
         handleDismiss();
       }
@@ -52,13 +55,25 @@ function ModalComponent({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
 
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [handleDismiss]);
+  }, [step.behavior?.preventEscapeDismiss, handleDismiss]);
+
+  // Auto-dismiss timer (if configured)
+  useEffect(() => {
+    if (step.actions?.autoDismissMs && step.actions.autoDismissMs > 0) {
+      const timer = setTimeout(() => {
+        handleDismiss();
+      }, step.actions.autoDismissMs);
+
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [step.actions?.autoDismissMs, handleDismiss]);
 
   return (
     <>
       <div
         className="dap-overlay-react-backdrop"
-        onClick={handleDismiss}
+        onClick={step.behavior?.preventBackdropDismiss ? undefined : handleDismiss}
         aria-hidden="true"
       />
       <div
