@@ -4,6 +4,7 @@
  */
 
 import type { Conditions, EvaluationContext, PredicateExpression } from './types.js';
+import { safeRegexTest } from './security.js';
 
 /**
  * Get a nested field value from an object using dot notation
@@ -108,15 +109,10 @@ export function evaluateConditions(conditions: Conditions, context: EvaluationCo
     }
   }
 
-  // Check pathRegex condition
+  // Check pathRegex condition with ReDoS protection
   if (matches && conditions.pathRegex) {
-    try {
-      const regex = new RegExp(conditions.pathRegex);
-      if (!regex.test(context.route.path)) {
-        matches = false;
-      }
-    } catch (error) {
-      console.error('Invalid pathRegex:', conditions.pathRegex, error);
+    const result = safeRegexTest(conditions.pathRegex, context.route.path);
+    if (result === null || result === false) {
       matches = false;
     }
   }

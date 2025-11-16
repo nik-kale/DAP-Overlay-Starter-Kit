@@ -14,6 +14,7 @@ export interface RendererCallbacks {
 export class OverlayRenderer {
   private popperInstances: Map<string, PopperInstance> = new Map();
   private overlayElements: Map<string, HTMLElement> = new Map();
+  private eventListeners: Map<string, Array<{ element: EventTarget; type: string; handler: EventListener }>> = new Map();
   private callbacks: RendererCallbacks;
 
   constructor(callbacks: RendererCallbacks) {
@@ -105,32 +106,42 @@ export class OverlayRenderer {
    * Attach event listeners to overlay element
    */
   private attachEventListeners(overlay: HTMLElement, step: Step): void {
+    const listeners: Array<{ element: EventTarget; type: string; handler: EventListener }> = [];
+
     // Close button
     const closeBtn = overlay.querySelector('.dap-overlay__close');
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+      const handler = () => {
         this.callbacks.onDismiss(step.id);
-      });
+      };
+      closeBtn.addEventListener('click', handler);
+      listeners.push({ element: closeBtn, type: 'click', handler });
     }
 
     // CTA button
     const ctaBtn = overlay.querySelector('.dap-overlay__cta');
     if (ctaBtn) {
-      ctaBtn.addEventListener('click', () => {
+      const handler = () => {
         this.callbacks.onCtaClick(step.id);
-      });
+      };
+      ctaBtn.addEventListener('click', handler);
+      listeners.push({ element: ctaBtn, type: 'click', handler });
     }
 
     // ESC key for modals
     if (step.type === 'modal') {
-      const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
+      const handleEsc = (e: Event) => {
+        const keyEvent = e as KeyboardEvent;
+        if (keyEvent.key === 'Escape') {
           this.callbacks.onDismiss(step.id);
-          document.removeEventListener('keydown', handleEsc);
         }
       };
       document.addEventListener('keydown', handleEsc);
+      listeners.push({ element: document, type: 'keydown', handler: handleEsc });
     }
+
+    // Store all listeners for cleanup
+    this.eventListeners.set(step.id, listeners);
   }
 
   /**
@@ -207,6 +218,15 @@ export class OverlayRenderer {
    * Destroy/remove an overlay
    */
   destroy(stepId: string): void {
+    // Remove event listeners first to prevent memory leaks
+    const listeners = this.eventListeners.get(stepId);
+    if (listeners) {
+      listeners.forEach(({ element, type, handler }) => {
+        element.removeEventListener(type, handler);
+      });
+      this.eventListeners.delete(stepId);
+    }
+
     // Destroy Popper instance
     const popper = this.popperInstances.get(stepId);
     if (popper) {

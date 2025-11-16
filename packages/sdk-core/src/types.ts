@@ -118,3 +118,16 @@ export interface TelemetryEvent {
 export type CallbackId = string;
 export type CallbackFn = (context?: unknown) => void | Promise<void>;
 export type CallbackMap = Map<CallbackId, CallbackFn>;
+
+// Utility types for better TypeScript DX
+export type TooltipStep = Step & { type: 'tooltip'; selector: string };
+export type BannerStep = Step & { type: 'banner' };
+export type ModalStep = Step & { type: 'modal' };
+
+// Debug mode configuration
+export interface DebugOptions {
+  enabled: boolean;
+  logConditionEvaluation?: boolean;
+  logStepResolution?: boolean;
+  logTelemetry?: boolean;
+}
