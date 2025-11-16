@@ -5,6 +5,7 @@
 import { useEffect, useCallback, memo } from 'react';
 import type { Step } from '@dap-overlay/sdk-core';
 import { useSanitizedHtml } from '../hooks/useSanitizedHtml.js';
+import { useFocusTrap } from '../hooks/useFocusTrap.js';
 
 export interface ModalProps {
   step: Step;
@@ -14,6 +15,9 @@ export interface ModalProps {
 }
 
 function ModalComponent({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
+  // Focus trap for accessibility (WCAG 2.1 requirement)
+  const modalRef = useFocusTrap(true);
+
   // Sanitize HTML content if needed
   const sanitizedBody = useSanitizedHtml(
     step.content.body,
@@ -57,7 +61,13 @@ function ModalComponent({ step, onDismiss, onCtaClick, onShow }: ModalProps) {
         onClick={handleDismiss}
         aria-hidden="true"
       />
-      <div className="dap-overlay-react dap-overlay-react--modal" role="dialog" aria-modal="true">
+      <div
+        ref={modalRef}
+        className="dap-overlay-react dap-overlay-react--modal"
+        role="dialog"
+        aria-modal="true"
+        style={step.style ? { zIndex: step.style.zIndex, ...step.style } : undefined}
+      >
         <div className="dap-overlay-react__header">
           {step.content.title && <h3 className="dap-overlay-react__title">{step.content.title}</h3>}
           <button

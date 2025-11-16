@@ -76,6 +76,11 @@ export interface TelemetryHooks {
   onCtaClickEvent?: string;
 }
 
+export interface StepStyle {
+  zIndex?: number;
+  [key: string]: unknown;
+}
+
 export interface Step {
   id: string;
   type: StepType;
@@ -85,6 +90,7 @@ export interface Step {
   popper?: PopperOptions;
   actions?: Actions;
   telemetry?: TelemetryHooks;
+  style?: StepStyle;
 }
 
 export interface StepsDocument {

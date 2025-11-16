@@ -75,6 +75,7 @@ function TooltipComponent({ step, onDismiss, onCtaClick, onShow }: TooltipProps)
       className="dap-overlay-react dap-overlay-react--tooltip"
       role="tooltip"
       aria-live="polite"
+      style={step.style ? { zIndex: step.style.zIndex, ...step.style } : undefined}
     >
       {step.content.title && (
         <div className="dap-overlay-react__header">

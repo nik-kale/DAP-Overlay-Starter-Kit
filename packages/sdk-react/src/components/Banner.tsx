@@ -39,7 +39,12 @@ function BannerComponent({ step, onDismiss, onCtaClick, onShow }: BannerProps) {
   }, [onCtaClick, step]);
 
   return (
-    <div className="dap-overlay-react dap-overlay-react--banner" role="status" aria-live="polite">
+    <div
+      className="dap-overlay-react dap-overlay-react--banner"
+      role="status"
+      aria-live="polite"
+      style={step.style ? { zIndex: step.style.zIndex, ...step.style } : undefined}
+    >
       <div className="dap-overlay-react__header">
         {step.content.title && <h3 className="dap-overlay-react__title">{step.content.title}</h3>}
         <button
