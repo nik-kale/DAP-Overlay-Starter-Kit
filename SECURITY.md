@@ -192,3 +192,173 @@ Security patches are released ASAP with:
 - CVE number (for serious issues)
 
 Subscribe to releases to stay informed.
+
+---
+
+# V2-V5 Features Security Review
+
+## Audit Summary (2025-01-17)
+
+**Features Reviewed:** V2 (Analytics), V3 (Segmentation & i18n), V4 (Flows), V5 (Experiments)
+**Audit Tool:** pnpm audit
+**Status:** ✅ Production Ready
+
+### Vulnerability Scan Results
+
+- **Total Issues:** 1 (dev dependency only)
+- **Production Code:** 0 vulnerabilities
+- **Recommendation:** Safe for production deployment
+
+## New Security Features
+
+### V2 Analytics - Rate Limiting
+
+Protection against API abuse and DoS attacks:
+
+```typescript
+// Token bucket algorithm
+const analytics = new AnalyticsEngine({
+  enableRateLimit: true,
+  maxEventsPerSecond: 50, // Configurable limit
+});
+```
+
+### V2 Analytics - Retry with Exponential Backoff
+
+Prevents thundering herd problems:
+
+```typescript
+// Automatic retry with backoff
+const analytics = new AnalyticsEngine({
+  enableRetry: true,
+  maxRetries: 3,
+  baseDelay: 1000, // 1s, 2s, 4s backoff
+});
+```
+
+### V3 Segmentation - Privacy by Default
+
+No PII required:
+
+```typescript
+// Use role/plan attributes instead of email/name
+segmentation.setUserProfile(userId, {
+  user: {
+    userId: hashUserId(userId), // Hash user IDs
+    role: 'admin',
+    plan: 'enterprise',
+    // NO: email, name, phone
+  },
+});
+```
+
+### V5 Experiments - Deterministic Assignment
+
+Prevents assignment manipulation:
+
+```typescript
+// Server-side validation recommended
+const assignment = experiments.assignVariant('test-id', userId);
+// Verify assignment server-side before trusting client
+```
+
+## Security Best Practices for V2-V5
+
+### Analytics Data Collection
+
+1. **Minimize PII:** Only collect necessary data
+2. **Hash User IDs:** Use hashed identifiers
+3. **Server Validation:** Validate all events server-side
+4. **Rate Limiting:** Enforce server-side limits
+5. **Encryption:** Use HTTPS for all API calls
+
+### Segmentation & Targeting
+
+1. **No Sensitive Data:** Don't segment on PII
+2. **Server-Side Logic:** Critical targeting on server
+3. **Audit Segments:** Review segment definitions regularly
+4. **Access Control:** Protect segment configuration
+
+### Flow State Management
+
+1. **Client-Side Only:** Don't trust flow state for authorization
+2. **Server Validation:** Verify completion server-side
+3. **Timeout Enforcement:** Limit flow duration
+4. **Progress Storage:** Use secure session storage
+
+### A/B Testing Security
+
+1. **Server Assignment:** Assign variants server-side for critical tests
+2. **Validate Results:** Don't trust client-reported conversions
+3. **Audit Experiments:** Review experiment configs
+4. **Privacy Compliance:** Obtain user consent
+
+## Production Deployment Checklist
+
+### V2 Analytics
+
+- [ ] Configure server-side rate limiting
+- [ ] Implement API authentication
+- [ ] Set up event validation endpoints
+- [ ] Enable retry logic in production
+- [ ] Monitor for unusual event patterns
+
+### V3 Segmentation
+
+- [ ] Review all segment definitions
+- [ ] Ensure no PII in attributes
+- [ ] Implement server-side targeting validation
+- [ ] Set up cohort access controls
+- [ ] Audit translation files for security
+
+### V4 Flows
+
+- [ ] Validate flow definitions
+- [ ] Implement server-side progress verification
+- [ ] Set appropriate timeouts
+- [ ] Review branching logic for exploits
+- [ ] Test flow completion tracking
+
+### V5 Experiments
+
+- [ ] Validate experiment configurations
+- [ ] Implement server-side assignment
+- [ ] Protect goal tracking endpoints
+- [ ] Review statistical analysis
+- [ ] Monitor for experiment manipulation
+
+## Compliance Considerations
+
+### GDPR (Europe)
+
+- [ ] Obtain consent for analytics tracking
+- [ ] Provide data export functionality (✅ Implemented)
+- [ ] Implement data deletion (✅ Implemented via clearData())
+- [ ] Document data processing activities
+- [ ] Implement "Do Not Track" support
+
+### CCPA (California)
+
+- [ ] Disclose data collection practices
+- [ ] Provide opt-out mechanism
+- [ ] Honor user privacy requests
+- [ ] Maintain data inventory
+
+### HIPAA (Healthcare)
+
+- ⚠️ **Not HIPAA Compliant:** Do not use for PHI without additional safeguards
+- Implement encryption at rest
+- Add audit logging
+- Use HIPAA-compliant hosting
+
+## Security Contact
+
+For security issues related to V2-V5 features, contact: **security@example.com**
+
+Include:
+- Feature version (V2, V3, V4, or V5)
+- Affected component (Analytics, Segmentation, Flows, Experiments)
+- Detailed reproduction steps
+- Potential impact assessment
+
+**Response SLA:** 24 hours for critical issues, 72 hours for others

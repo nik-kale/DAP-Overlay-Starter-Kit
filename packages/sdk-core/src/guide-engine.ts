@@ -12,21 +12,25 @@ import type {
 } from './types.js';
 import { evaluateConditions } from './evaluator.js';
 import { TelemetryClient } from './telemetry.js';
+import { AnalyticsEngine } from './analytics.js';
 
 export interface GuideEngineOptions {
   steps: StepsDocument | Step[];
   telemetryClient?: TelemetryClient;
+  analyticsEngine?: AnalyticsEngine;
   callbacks?: CallbackMap;
 }
 
 export class GuideEngine {
   private steps: Step[] = [];
   private telemetryClient: TelemetryClient;
+  private analyticsEngine?: AnalyticsEngine;
   private callbacks: CallbackMap;
   private activeSteps: Set<string> = new Set();
 
   constructor(options: GuideEngineOptions) {
     this.telemetryClient = options.telemetryClient || new TelemetryClient();
+    this.analyticsEngine = options.analyticsEngine;
     this.callbacks = options.callbacks || new Map();
 
     // Load steps (validation removed to reduce bundle size by ~100KB)
@@ -108,6 +112,14 @@ export class GuideEngine {
   async onStepShow(step: Step): Promise<void> {
     this.activeSteps.add(step.id);
 
+    // Track analytics event
+    if (this.analyticsEngine) {
+      this.analyticsEngine.trackStepViewed(step.id, {
+        stepType: step.type,
+        selector: step.selector,
+      });
+    }
+
     // Invoke onShow callback if defined
     if (step.actions?.onShow) {
       await this.invokeCallback(step.actions.onShow, { stepId: step.id });
@@ -128,6 +140,13 @@ export class GuideEngine {
   async onStepDismiss(step: Step): Promise<void> {
     this.activeSteps.delete(step.id);
 
+    // Track analytics event
+    if (this.analyticsEngine) {
+      this.analyticsEngine.trackStepDismissed(step.id, {
+        stepType: step.type,
+      });
+    }
+
     // Invoke onDismiss callback if defined
     if (step.actions?.onDismiss) {
       await this.invokeCallback(step.actions.onDismiss, { stepId: step.id });
@@ -146,6 +165,13 @@ export class GuideEngine {
    * Handle CTA click event
    */
   async onCtaClick(step: Step): Promise<void> {
+    // Track analytics event
+    if (this.analyticsEngine) {
+      this.analyticsEngine.trackCtaClicked(step.id, step.actions?.cta?.label || 'CTA', {
+        stepType: step.type,
+      });
+    }
+
     // Emit telemetry event if defined
     if (step.telemetry?.onCtaClickEvent) {
       await this.telemetryClient.emit(step.telemetry.onCtaClickEvent, {
@@ -177,5 +203,12 @@ export class GuideEngine {
    */
   getTelemetryClient(): TelemetryClient {
     return this.telemetryClient;
+  }
+
+  /**
+   * Get the analytics engine
+   */
+  getAnalyticsEngine(): AnalyticsEngine | undefined {
+    return this.analyticsEngine;
   }
 }
