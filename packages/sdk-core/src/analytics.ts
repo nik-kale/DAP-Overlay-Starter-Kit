@@ -4,6 +4,7 @@
  */
 
 import { retry, RateLimiter } from './utils.js';
+import { PrivacyEngine, type PrivacyConfig } from './privacy.js';
 
 // ==================== Types ====================
 
@@ -96,6 +97,7 @@ export interface AnalyticsConfig {
   flushInterval?: number; // milliseconds
   enableLocalStorage?: boolean;
   storageKey?: string;
+  privacy?: Partial<PrivacyConfig>;
 }
 
 // ==================== Analytics Engine ====================
@@ -113,6 +115,7 @@ export class AnalyticsEngine {
   private funnels: Map<string, FunnelAnalysis> = new Map();
   private sessions: Map<string, SessionData> = new Map();
   private userBehaviors: Map<string, UserBehavior> = new Map();
+  private privacyEngine: PrivacyEngine;
 
   constructor(config: AnalyticsConfig = {}) {
     this.config = {
@@ -127,11 +130,15 @@ export class AnalyticsEngine {
       flushInterval: config.flushInterval || 5000, // 5 seconds
       enableLocalStorage: config.enableLocalStorage ?? true,
       storageKey: config.storageKey || 'dap_analytics_session',
+      privacy: config.privacy || {},
     };
 
     this.sessionId = this.generateSessionId();
     this.sessionStartTime = Date.now();
     this.lastActivityTime = Date.now();
+
+    // Setup privacy engine
+    this.privacyEngine = new PrivacyEngine(this.config.privacy);
 
     // Setup rate limiter
     this.rateLimiter = this.config.enableRateLimit
@@ -233,7 +240,7 @@ export class AnalyticsEngine {
       return;
     }
 
-    const event: AnalyticsEvent = {
+    let event: AnalyticsEvent = {
       eventName,
       eventType,
       timestamp: Date.now(),
@@ -242,6 +249,9 @@ export class AnalyticsEngine {
       payload,
       metadata: this.collectMetadata(),
     };
+
+    // Apply privacy scrubbing to event
+    event = this.privacyEngine.scrubEvent(event) as AnalyticsEvent;
 
     this.events.push(event);
     this.eventBuffer.push(event);
@@ -286,9 +296,14 @@ export class AnalyticsEngine {
   }
 
   trackError(error: Error, context: Record<string, unknown> = {}): void {
-    this.track('error', AnalyticsEventType.ERROR, {
+    const errorData = this.privacyEngine.scrubStackTrace({
       message: error.message,
       stack: error.stack,
+      name: error.name,
+    });
+
+    this.track('error', AnalyticsEventType.ERROR, {
+      ...errorData,
       ...context,
     });
   }
@@ -649,6 +664,20 @@ export class AnalyticsEngine {
         this.eventBuffer.unshift(...eventsToSend);
       }
     }
+  }
+
+  /**
+   * Get the privacy engine for configuration
+   */
+  getPrivacyEngine(): PrivacyEngine {
+    return this.privacyEngine;
+  }
+
+  /**
+   * Update privacy configuration
+   */
+  updatePrivacyConfig(config: Partial<PrivacyConfig>): void {
+    this.privacyEngine.configure(config);
   }
 
   destroy(): void {
