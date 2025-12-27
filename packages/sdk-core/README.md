@@ -111,14 +111,26 @@ await engine.onCtaClick(step);
 ### Security
 
 ```typescript
-import { sanitizeHtml, validateSelector } from '@dap-overlay/sdk-core';
+import { sanitizeHtml, validateSelector, validateUrl } from '@dap-overlay/sdk-core';
 
-const safeHtml = sanitizeHtml('<p>Hello <script>alert("xss")</script></p>');
-// Result: '<p>Hello </p>'
+// Sanitize HTML with automatic URL protocol validation
+const safeHtml = await sanitizeHtml('<p>Hello <a href="javascript:alert(1)">click</a></p>');
+// Result: '<p>Hello <a>click</a></p>' (javascript: protocol blocked)
 
 const isValid = validateSelector('#my-element');
 // true
+
+// Validate URL protocols (blocks javascript:, data:, vbscript:, etc.)
+const isSafeUrl = validateUrl('https://example.com'); // true
+const isDangerousUrl = validateUrl('javascript:alert(1)'); // false
 ```
+
+**Security Features:**
+- URL protocol validation (allows: http, https, mailto, tel)
+- Automatic blocking of dangerous protocols (javascript:, data:, vbscript:)
+- Secure rel attributes added to external links (noopener, noreferrer)
+- HTTPS enforcement warnings for telemetry endpoints
+- CORS credentials policy (same-origin only)
 
 ### Debug Logging
 
