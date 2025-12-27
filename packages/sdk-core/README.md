@@ -155,6 +155,63 @@ logger.error('Error message', error);
 const debugLogger = engine.getDebugLogger();
 ```
 
+### Structured Logging
+
+```typescript
+import { 
+  Logger, 
+  LogLevel, 
+  ConsoleSink, 
+  HttpSink,
+  getLogger 
+} from '@dap-overlay/sdk-core';
+
+// Get global logger with console sink
+const logger = getLogger({
+  level: LogLevel.INFO,
+  module: 'MyApp',
+});
+
+// Log messages at different levels
+logger.debug('Debug message', { userId: '123' });
+logger.info('Info message', { action: 'user_login' });
+logger.warn('Warning message', { threshold: 0.9 });
+logger.error('Error occurred', new Error('Something failed'), { context: 'payment' });
+
+// Create child logger with scoped module name
+const childLogger = logger.child('Analytics');
+childLogger.info('Event tracked'); // [MyApp:Analytics] Event tracked
+
+// Add HTTP sink for log aggregation
+const httpSink = new HttpSink('https://logs.example.com/api/logs', 10, 5000);
+logger.addSink(httpSink);
+
+// Change log level at runtime
+logger.configure({ level: LogLevel.DEBUG });
+
+// Create custom logger with multiple sinks
+const customLogger = new Logger({
+  level: LogLevel.WARN,
+  module: 'Custom',
+  sinks: [
+    new ConsoleSink(),
+    new HttpSink('https://logs.example.com/api/logs')
+  ],
+  traceId: 'abc-123-def'
+});
+```
+
+**Log Levels:**
+- `DEBUG (0)` - Detailed debugging information
+- `INFO (1)` - General informational messages
+- `WARN (2)` - Warning messages
+- `ERROR (3)` - Error messages
+- `SILENT (4)` - No logging
+
+**Built-in Sinks:**
+- `ConsoleSink` - Writes to browser console
+- `HttpSink` - Batches and sends logs to HTTP endpoint
+
 ### Privacy & PII Scrubbing
 
 ```typescript
