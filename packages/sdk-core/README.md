@@ -103,6 +103,61 @@ const isValid = validateSelector('#my-element');
 // true
 ```
 
+### Privacy & PII Scrubbing
+
+```typescript
+import { 
+  AnalyticsEngine,
+  PrivacyEngine,
+  scrubUrl,
+  scrubPii,
+  hashUserId 
+} from '@dap-overlay/sdk-core';
+
+// Configure analytics with privacy settings
+const analytics = new AnalyticsEngine({
+  privacy: {
+    scrubUrls: true,
+    scrubPii: true,
+    excludeStackTraces: true,
+    hashUserIds: false,
+    sensitiveParams: ['custom_token', 'api_secret']
+  }
+});
+
+// PII is automatically scrubbed from all events
+analytics.trackPageView('/checkout?token=abc123&email=user@example.com');
+// URL will be scrubbed to: /checkout?token=[REDACTED]&email=[REDACTED]
+
+// Standalone privacy utilities
+const cleanUrl = scrubUrl('https://example.com?password=secret123');
+// Result: 'https://example.com?password=[REDACTED]'
+
+const cleanText = scrubPii('Contact me at john@example.com or 555-123-4567');
+// Result: 'Contact me at [EMAIL_REDACTED] or [PHONE_REDACTED]'
+
+const hashedId = await hashUserId('user123');
+// Result: SHA-256 hash of user ID
+
+// Update privacy configuration at runtime
+analytics.updatePrivacyConfig({
+  scrubUrls: false,
+  hashUserIds: true
+});
+
+// Access privacy engine directly
+const privacyEngine = analytics.getPrivacyEngine();
+const config = privacyEngine.getConfig();
+```
+
+**Privacy Features:**
+- Automatic URL scrubbing (query parameters: token, password, email, etc.)
+- PII pattern detection (emails, phone numbers, SSNs, credit cards, IPs)
+- Stack trace exclusion for error events
+- User ID hashing (SHA-256)
+- Configurable sensitive parameters
+- GDPR/CCPA compliance support
+
 ## API Reference
 
 See [main README](../../README.md) for full documentation.
