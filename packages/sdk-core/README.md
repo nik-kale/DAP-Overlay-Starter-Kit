@@ -76,7 +76,14 @@ const engine = new GuideEngine({
   telemetryClient: client,
   callbacks: new Map([
     ['myCallback', () => console.log('Callback invoked')]
-  ])
+  ]),
+  debug: {
+    enabled: true,
+    logConditionEvaluation: true,
+    logStepResolution: true,
+    logTelemetry: true,
+    logCallbacks: true
+  }
 });
 
 // Resolve active steps
@@ -89,6 +96,29 @@ const activeSteps = await engine.resolveActiveSteps(
 await engine.onStepShow(step);
 await engine.onStepDismiss(step);
 await engine.onCtaClick(step);
+```
+
+### Debug Logging
+
+```typescript
+import { getDebugLogger } from '@dap-overlay/sdk-core';
+
+// Get global debug logger instance
+const logger = getDebugLogger({
+  enabled: true,
+  logConditionEvaluation: true,
+  logStepResolution: true,
+  logTelemetry: true,
+  logCallbacks: true
+});
+
+// Use logger methods
+logger.info('Custom message', { data: 'value' });
+logger.warn('Warning message');
+logger.error('Error message', error);
+
+// Or access from GuideEngine
+const debugLogger = engine.getDebugLogger();
 ```
 
 ### Security

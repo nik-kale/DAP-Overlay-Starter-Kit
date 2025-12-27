@@ -9,16 +9,19 @@ import type {
   CallbackMap,
   TelemetryContext,
   RouteContext,
+  DebugOptions,
 } from './types.js';
 import { evaluateConditions } from './evaluator.js';
 import { TelemetryClient } from './telemetry.js';
 import { AnalyticsEngine } from './analytics.js';
+import { getDebugLogger, DebugLogger } from './debug.js';
 
 export interface GuideEngineOptions {
   steps: StepsDocument | Step[];
   telemetryClient?: TelemetryClient;
   analyticsEngine?: AnalyticsEngine;
   callbacks?: CallbackMap;
+  debug?: DebugOptions;
 }
 
 export class GuideEngine {
@@ -27,15 +30,18 @@ export class GuideEngine {
   private analyticsEngine?: AnalyticsEngine;
   private callbacks: CallbackMap;
   private activeSteps: Set<string> = new Set();
+  private debugLogger: DebugLogger;
 
   constructor(options: GuideEngineOptions) {
     this.telemetryClient = options.telemetryClient || new TelemetryClient();
     this.analyticsEngine = options.analyticsEngine;
     this.callbacks = options.callbacks || new Map();
+    this.debugLogger = getDebugLogger(options.debug);
 
     // Load steps (validation removed to reduce bundle size by ~100KB)
     // Validate your steps.json at build time or using a separate tool
     this.loadSteps(options.steps);
+    this.debugLogger.info(`GuideEngine initialized with ${this.steps.length} steps`);
   }
 
   /**
@@ -69,8 +75,25 @@ export class GuideEngine {
       ...customContext,
     };
 
+    this.debugLogger.info('Resolving active steps', { 
+      totalSteps: this.steps.length,
+      context: { errorId: telemetryContext.errorId, path: routeContext.path }
+    });
+
     const activeSteps = this.steps.filter((step) => {
-      return evaluateConditions(step.when, context);
+      const result = evaluateConditions(step.when, context);
+      
+      if (result) {
+        this.debugLogger.logStepResolution(step.id, 'resolved');
+      } else {
+        this.debugLogger.logStepResolution(step.id, 'filtered', 'Conditions not met');
+      }
+
+      return result;
+    });
+
+    this.debugLogger.info(`Resolved ${activeSteps.length} active steps`, {
+      stepIds: activeSteps.map(s => s.id)
     });
 
     return activeSteps;
@@ -95,13 +118,18 @@ export class GuideEngine {
    */
   async invokeCallback(callbackId: string, context?: unknown): Promise<void> {
     const callback = this.callbacks.get(callbackId);
+    const stepId = (context as { stepId?: string })?.stepId;
+    
     if (callback) {
       try {
         await callback(context);
+        this.debugLogger.logCallback(callbackId, stepId);
       } catch (error) {
+        this.debugLogger.logCallback(callbackId, stepId, error as Error);
         console.error(`Error invoking callback ${callbackId}:`, error);
       }
     } else {
+      this.debugLogger.warn(`Callback not found: ${callbackId}`);
       console.warn(`Callback not found: ${callbackId}`);
     }
   }
@@ -111,6 +139,10 @@ export class GuideEngine {
    */
   async onStepShow(step: Step): Promise<void> {
     this.activeSteps.add(step.id);
+    this.debugLogger.info(`Step shown: ${step.id}`, { 
+      type: step.type, 
+      selector: step.selector 
+    });
 
     // Track analytics event
     if (this.analyticsEngine) {
@@ -127,6 +159,9 @@ export class GuideEngine {
 
     // Emit telemetry event if defined
     if (step.telemetry?.onShowEvent) {
+      this.debugLogger.logTelemetry(step.telemetry.onShowEvent, step.id, {
+        stepType: step.type,
+      });
       await this.telemetryClient.emit(step.telemetry.onShowEvent, {
         stepId: step.id,
         stepType: step.type,
@@ -139,6 +174,9 @@ export class GuideEngine {
    */
   async onStepDismiss(step: Step): Promise<void> {
     this.activeSteps.delete(step.id);
+    this.debugLogger.info(`Step dismissed: ${step.id}`, { 
+      type: step.type 
+    });
 
     // Track analytics event
     if (this.analyticsEngine) {
@@ -154,6 +192,9 @@ export class GuideEngine {
 
     // Emit telemetry event if defined
     if (step.telemetry?.onDismissEvent) {
+      this.debugLogger.logTelemetry(step.telemetry.onDismissEvent, step.id, {
+        stepType: step.type,
+      });
       await this.telemetryClient.emit(step.telemetry.onDismissEvent, {
         stepId: step.id,
         stepType: step.type,
@@ -165,6 +206,10 @@ export class GuideEngine {
    * Handle CTA click event
    */
   async onCtaClick(step: Step): Promise<void> {
+    this.debugLogger.info(`CTA clicked for step: ${step.id}`, {
+      label: step.actions?.cta?.label,
+    });
+
     // Track analytics event
     if (this.analyticsEngine) {
       this.analyticsEngine.trackCtaClicked(step.id, step.actions?.cta?.label || 'CTA', {
@@ -174,6 +219,9 @@ export class GuideEngine {
 
     // Emit telemetry event if defined
     if (step.telemetry?.onCtaClickEvent) {
+      this.debugLogger.logTelemetry(step.telemetry.onCtaClickEvent, step.id, {
+        stepType: step.type,
+      });
       await this.telemetryClient.emit(step.telemetry.onCtaClickEvent, {
         stepId: step.id,
         stepType: step.type,
@@ -210,5 +258,12 @@ export class GuideEngine {
    */
   getAnalyticsEngine(): AnalyticsEngine | undefined {
     return this.analyticsEngine;
+  }
+
+  /**
+   * Get the debug logger
+   */
+  getDebugLogger(): DebugLogger {
+    return this.debugLogger;
   }
 }
