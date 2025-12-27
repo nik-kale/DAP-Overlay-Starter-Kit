@@ -13,12 +13,14 @@ import type {
 import { evaluateConditions } from './evaluator.js';
 import { TelemetryClient } from './telemetry.js';
 import { AnalyticsEngine } from './analytics.js';
+import { getPerfMonitor, type PerfMonitorOptions } from './performance.js';
 
 export interface GuideEngineOptions {
   steps: StepsDocument | Step[];
   telemetryClient?: TelemetryClient;
   analyticsEngine?: AnalyticsEngine;
   callbacks?: CallbackMap;
+  performance?: PerfMonitorOptions;
 }
 
 export class GuideEngine {
@@ -32,6 +34,11 @@ export class GuideEngine {
     this.telemetryClient = options.telemetryClient || new TelemetryClient();
     this.analyticsEngine = options.analyticsEngine;
     this.callbacks = options.callbacks || new Map();
+
+    // Initialize performance monitoring
+    if (options.performance) {
+      getPerfMonitor(options.performance);
+    }
 
     // Load steps (validation removed to reduce bundle size by ~100KB)
     // Validate your steps.json at build time or using a separate tool
@@ -63,17 +70,38 @@ export class GuideEngine {
     routeContext: RouteContext,
     customContext: Record<string, unknown> = {}
   ): Promise<Step[]> {
-    const context: EvaluationContext = {
-      telemetry: telemetryContext,
-      route: routeContext,
-      ...customContext,
-    };
+    const perfMonitor = getPerfMonitor();
 
-    const activeSteps = this.steps.filter((step) => {
-      return evaluateConditions(step.when, context);
+    return await perfMonitor.measure('step_resolution', async () => {
+      const context: EvaluationContext = {
+        telemetry: telemetryContext,
+        route: routeContext,
+        ...customContext,
+      };
+
+      const activeSteps = this.steps.filter((step) => {
+        return evaluateConditions(step.when, context);
+      });
+
+      // Track performance event in analytics if available
+      if (this.analyticsEngine) {
+        const measurement = perfMonitor.getMeasurementsByLabel('step_resolution').slice(-1)[0];
+        if (measurement) {
+          this.analyticsEngine.track('sdk_performance', undefined, {
+            operation: 'step_resolution',
+            duration: measurement.duration,
+            stepCount: this.steps.length,
+            activeStepCount: activeSteps.length,
+          });
+        }
+      }
+
+      return activeSteps;
+    }, {
+      totalSteps: this.steps.length,
+      errorId: telemetryContext.errorId,
+      path: routeContext.path,
     });
-
-    return activeSteps;
   }
 
   /**

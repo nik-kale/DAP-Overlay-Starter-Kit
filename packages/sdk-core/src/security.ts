@@ -2,6 +2,8 @@
  * Security utilities for sanitizing HTML and preventing XSS
  */
 
+import { getPerfMonitor } from './performance.js';
+
 // Lazy-loaded DOMPurify instance (only loaded when needed)
 let DOMPurifyInstance: typeof import('dompurify').default | null = null;
 
@@ -32,34 +34,39 @@ export async function sanitizeHtml(html: string): Promise<string> {
     );
   }
 
+  const perfMonitor = getPerfMonitor();
   const DOMPurify = await loadDOMPurify();
 
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
-      'p',
-      'br',
-      'strong',
-      'em',
-      'u',
-      'a',
-      'ul',
-      'ol',
-      'li',
-      'span',
-      'div',
-      'h1',
-      'h2',
-      'h3',
-      'h4',
-      'h5',
-      'h6',
-      'code',
-      'pre',
-      'img', // Added for image support
-      'blockquote',
-    ],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'title', 'width', 'height'],
-    ALLOW_DATA_ATTR: false,
+  return perfMonitor.measureSync('html_sanitization', () => {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: [
+        'p',
+        'br',
+        'strong',
+        'em',
+        'u',
+        'a',
+        'ul',
+        'ol',
+        'li',
+        'span',
+        'div',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'code',
+        'pre',
+        'img', // Added for image support
+        'blockquote',
+      ],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'title', 'width', 'height'],
+      ALLOW_DATA_ATTR: false,
+    });
+  }, {
+    htmlLength: html.length,
   });
 }
 
