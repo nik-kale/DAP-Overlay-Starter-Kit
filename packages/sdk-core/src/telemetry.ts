@@ -6,6 +6,7 @@
 
 import type { TelemetryContext, TelemetryEvent } from './types.js';
 import { retry, RateLimiter } from './utils.js';
+import { getPerfMonitor } from './performance.js';
 
 export interface TelemetryClientOptions {
   baseUrl?: string;
@@ -92,53 +93,60 @@ export class TelemetryClient {
    * Emit a telemetry event
    */
   async emit(eventName: string, payload: Record<string, unknown> = {}): Promise<void> {
-    // Check rate limit
-    if (this.rateLimiter && !this.rateLimiter.tryConsume()) {
-      console.warn('[DAP Overlay] Telemetry event rate limit exceeded, event dropped:', eventName);
-      return;
-    }
+    const perfMonitor = getPerfMonitor();
 
-    const event: TelemetryEvent = {
-      eventName,
-      payload,
-      timestamp: Date.now(),
-    };
-
-    if (this.useMock) {
-      // In mock mode, just log to console
-      console.log('[Telemetry Event - MOCK]', event);
-      return;
-    }
-
-    const sendEvent = async () => {
-      const response = await fetch(`${this.baseUrl}/api/telemetry/emit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(event),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Telemetry emit failed: ${response.statusText}`);
+    return await perfMonitor.measure('telemetry_emit', async () => {
+      // Check rate limit
+      if (this.rateLimiter && !this.rateLimiter.tryConsume()) {
+        console.warn('[DAP Overlay] Telemetry event rate limit exceeded, event dropped:', eventName);
+        return;
       }
-    };
 
-    try {
-      if (this.enableRetry) {
-        await retry(sendEvent, {
-          maxAttempts: this.maxRetries,
-          baseDelay: 1000,
-          onRetry: (attempt, error) => {
-            console.warn(`[DAP Overlay] Retrying telemetry event (attempt ${attempt}):`, error.message);
+      const event: TelemetryEvent = {
+        eventName,
+        payload,
+        timestamp: Date.now(),
+      };
+
+      if (this.useMock) {
+        // In mock mode, just log to console
+        console.log('[Telemetry Event - MOCK]', event);
+        return;
+      }
+
+      const sendEvent = async () => {
+        const response = await fetch(`${this.baseUrl}/api/telemetry/emit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify(event),
         });
-      } else {
-        await sendEvent();
+
+        if (!response.ok) {
+          throw new Error(`Telemetry emit failed: ${response.statusText}`);
+        }
+      };
+
+      try {
+        if (this.enableRetry) {
+          await retry(sendEvent, {
+            maxAttempts: this.maxRetries,
+            baseDelay: 1000,
+            onRetry: (attempt, error) => {
+              console.warn(`[DAP Overlay] Retrying telemetry event (attempt ${attempt}):`, error.message);
+            },
+          });
+        } else {
+          await sendEvent();
+        }
+      } catch (error) {
+        console.error('[DAP Overlay] Failed to emit telemetry after retries:', error);
       }
-    } catch (error) {
-      console.error('[DAP Overlay] Failed to emit telemetry after retries:', error);
-    }
+    }, {
+      eventName,
+      useMock: this.useMock,
+    });
   }
 
   /**

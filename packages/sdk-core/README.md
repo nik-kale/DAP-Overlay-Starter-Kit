@@ -76,7 +76,17 @@ const engine = new GuideEngine({
   telemetryClient: client,
   callbacks: new Map([
     ['myCallback', () => console.log('Callback invoked')]
-  ])
+  ]),
+  performance: {
+    enabled: true,
+    budget: {
+      maxStepResolutionMs: 50,
+      maxRenderMs: 100,
+      warnOnExceed: true
+    },
+    trackMemory: true,
+    sampleRate: 1.0
+  }
 });
 
 // Resolve active steps
@@ -157,6 +167,30 @@ const config = privacyEngine.getConfig();
 - User ID hashing (SHA-256)
 - Configurable sensitive parameters
 - GDPR/CCPA compliance support
+
+### Performance Monitoring
+
+```typescript
+import { getPerfMonitor } from '@dap-overlay/sdk-core';
+
+// Get global performance monitor (automatically integrated with GuideEngine)
+const perfMonitor = getPerfMonitor({
+  enabled: true,
+  budget: {
+    maxStepResolutionMs: 50,
+    maxRenderMs: 100,
+    warnOnExceed: true
+  },
+  trackMemory: true
+});
+
+// Get performance report
+const report = perfMonitor.getReport();
+console.log('P95 duration:', report.summary.p95Duration);
+
+// Print summary
+console.log(perfMonitor.getSummaryString());
+```
 
 ## API Reference
 
