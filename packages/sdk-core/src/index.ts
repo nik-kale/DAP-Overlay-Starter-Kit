@@ -10,6 +10,7 @@ export * from './telemetry.js';
 export * from './guide-engine.js';
 export * from './security.js';
 export * from './debug.js';
+export * from './logger.js';
 export * from './utils.js';
 export * from './analytics.js';
 export * from './segmentation.js';
