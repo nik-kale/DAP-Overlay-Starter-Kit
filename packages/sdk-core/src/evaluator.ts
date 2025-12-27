@@ -7,6 +7,12 @@ import type { Conditions, EvaluationContext, PredicateExpression } from './types
 import { safeRegexTest } from './security.js';
 
 /**
+ * Maximum depth for nested predicate expressions
+ * Prevents stack overflow from deeply nested expressions
+ */
+const MAX_PREDICATE_DEPTH = 50;
+
+/**
  * Get a nested field value from an object using dot notation
  */
 function getFieldValue(obj: unknown, path: string): unknown {
@@ -27,7 +33,19 @@ function getFieldValue(obj: unknown, path: string): unknown {
 /**
  * Evaluate a single predicate expression
  */
-function evaluatePredicate(expr: PredicateExpression, context: EvaluationContext): boolean {
+function evaluatePredicate(
+  expr: PredicateExpression,
+  context: EvaluationContext,
+  depth: number = 0
+): boolean {
+  // Check depth limit to prevent stack overflow
+  if (depth > MAX_PREDICATE_DEPTH) {
+    console.error(
+      `[DAP Overlay] Predicate evaluation depth limit (${MAX_PREDICATE_DEPTH}) exceeded. ` +
+      'This may indicate a circular or excessively nested condition.'
+    );
+    return false;
+  }
   switch (expr.op) {
     case 'equals': {
       if (!expr.field) return false;
@@ -73,17 +91,37 @@ function evaluatePredicate(expr: PredicateExpression, context: EvaluationContext
 
     case 'and': {
       if (!expr.operands || expr.operands.length === 0) return false;
-      return expr.operands.every((op) => evaluatePredicate(op, context));
+      return expr.operands.every((op) => {
+        // Validate operand before recursion
+        if (!op || typeof op !== 'object' || !op.op) {
+          console.warn('[DAP Overlay] Invalid operand in "and" expression:', op);
+          return false;
+        }
+        return evaluatePredicate(op, context, depth + 1);
+      });
     }
 
     case 'or': {
       if (!expr.operands || expr.operands.length === 0) return false;
-      return expr.operands.some((op) => evaluatePredicate(op, context));
+      return expr.operands.some((op) => {
+        // Validate operand before recursion
+        if (!op || typeof op !== 'object' || !op.op) {
+          console.warn('[DAP Overlay] Invalid operand in "or" expression:', op);
+          return false;
+        }
+        return evaluatePredicate(op, context, depth + 1);
+      });
     }
 
     case 'not': {
       if (!expr.operands || expr.operands.length !== 1) return false;
-      return !evaluatePredicate(expr.operands[0], context);
+      const operand = expr.operands[0];
+      // Validate operand before recursion
+      if (!operand || typeof operand !== 'object' || !operand.op) {
+        console.warn('[DAP Overlay] Invalid operand in "not" expression:', operand);
+        return false;
+      }
+      return !evaluatePredicate(operand, context, depth + 1);
     }
 
     default:
