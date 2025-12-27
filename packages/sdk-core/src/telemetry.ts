@@ -49,6 +49,14 @@ export class TelemetryClient {
     this.enableRetry = options.enableRetry ?? true;
     this.maxRetries = options.maxRetries ?? 3;
 
+    // Warn if using HTTP for non-localhost endpoints
+    if (!this.useMock && this.baseUrl.startsWith('http://') && !this.baseUrl.includes('localhost')) {
+      console.warn(
+        '[DAP Overlay] TelemetryClient is using HTTP for a non-localhost endpoint. ' +
+        'This is insecure and may leak sensitive data. Please use HTTPS in production.'
+      );
+    }
+
     // Initialize rate limiter if enabled
     const enableRateLimit = options.enableRateLimit ?? true;
     const maxEventsPerSecond = options.maxEventsPerSecond ?? 10;
@@ -76,6 +84,7 @@ export class TelemetryClient {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(context),
+        credentials: 'same-origin', // Only send credentials for same-origin requests
       });
 
       if (!response.ok) {
@@ -121,6 +130,7 @@ export class TelemetryClient {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(event),
+          credentials: 'same-origin', // Only send credentials for same-origin requests
         });
 
         if (!response.ok) {
