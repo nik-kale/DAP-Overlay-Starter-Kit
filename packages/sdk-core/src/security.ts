@@ -34,7 +34,41 @@ export async function sanitizeHtml(html: string): Promise<string> {
 
   const DOMPurify = await loadDOMPurify();
 
-  return DOMPurify.sanitize(html, {
+  // Add hook to validate URLs in href and src attributes
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    // Validate href attributes (links)
+    if (node.hasAttribute('href')) {
+      const href = node.getAttribute('href');
+      if (href && !validateUrl(href)) {
+        console.warn(`[DAP Overlay] Blocked potentially dangerous URL in href: ${href}`);
+        node.removeAttribute('href');
+      }
+    }
+
+    // Validate src attributes (images)
+    if (node.hasAttribute('src')) {
+      const src = node.getAttribute('src');
+      if (src && !validateUrl(src)) {
+        console.warn(`[DAP Overlay] Blocked potentially dangerous URL in src: ${src}`);
+        node.removeAttribute('src');
+      }
+    }
+
+    // Ensure external links have secure rel attributes
+    if (node.tagName === 'A' && node.hasAttribute('href')) {
+      const href = node.getAttribute('href');
+      if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+        // Add noopener and noreferrer for security
+        const rel = node.getAttribute('rel');
+        const relValues = new Set(rel ? rel.split(/\s+/) : []);
+        relValues.add('noopener');
+        relValues.add('noreferrer');
+        node.setAttribute('rel', Array.from(relValues).join(' '));
+      }
+    }
+  });
+
+  const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [
       'p',
       'br',
@@ -61,6 +95,11 @@ export async function sanitizeHtml(html: string): Promise<string> {
     ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'title', 'width', 'height'],
     ALLOW_DATA_ATTR: false,
   });
+
+  // Remove hooks to prevent memory leaks
+  DOMPurify.removeAllHooks();
+
+  return sanitized;
 }
 
 /**
@@ -120,6 +159,42 @@ export function validateSelector(selector: string, testInDom = false): boolean {
   }
 
   return true;
+}
+
+/**
+ * Allowed URL protocols for href and src attributes
+ */
+const ALLOWED_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:'];
+
+/**
+ * Validate that a URL uses an allowed protocol
+ * Prevents javascript:, data:, vbscript:, and other XSS vectors
+ *
+ * @param url - The URL to validate
+ * @returns {boolean} True if the URL uses an allowed protocol
+ */
+export function validateUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
+
+  // Trim whitespace
+  const trimmed = url.trim();
+
+  // Allow relative URLs (start with / or # or ?)
+  if (trimmed.startsWith('/') || trimmed.startsWith('#') || trimmed.startsWith('?')) {
+    return true;
+  }
+
+  try {
+    // Parse the URL (will throw for invalid URLs)
+    // Use a base URL for relative URLs to prevent errors
+    const parsed = new URL(trimmed, 'http://example.com');
+    return ALLOWED_PROTOCOLS.includes(parsed.protocol);
+  } catch {
+    // If URL parsing fails, reject it
+    return false;
+  }
 }
 
 /**
