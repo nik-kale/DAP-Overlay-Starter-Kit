@@ -86,6 +86,13 @@ const engine = new GuideEngine({
     },
     trackMemory: true,
     sampleRate: 1.0
+  },
+  debug: {
+    enabled: true,
+    logConditionEvaluation: true,
+    logStepResolution: true,
+    logTelemetry: true,
+    logCallbacks: true
   }
 });
 
@@ -111,6 +118,29 @@ const safeHtml = sanitizeHtml('<p>Hello <script>alert("xss")</script></p>');
 
 const isValid = validateSelector('#my-element');
 // true
+```
+
+### Debug Logging
+
+```typescript
+import { getDebugLogger } from '@dap-overlay/sdk-core';
+
+// Get global debug logger instance
+const logger = getDebugLogger({
+  enabled: true,
+  logConditionEvaluation: true,
+  logStepResolution: true,
+  logTelemetry: true,
+  logCallbacks: true
+});
+
+// Use logger methods
+logger.info('Custom message', { data: 'value' });
+logger.warn('Warning message');
+logger.error('Error message', error);
+
+// Or access from GuideEngine
+const debugLogger = engine.getDebugLogger();
 ```
 
 ### Privacy & PII Scrubbing
